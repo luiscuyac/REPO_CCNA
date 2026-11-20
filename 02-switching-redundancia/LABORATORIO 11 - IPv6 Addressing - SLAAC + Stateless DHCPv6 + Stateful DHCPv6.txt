@@ -1,0 +1,105 @@
+LABORATORIO: IPv6 Addressing - SLAAC + Stateless DHCPv6 + Stateful DHCPv6
+
+Objetivo:
+Dominar los tres métodos de asignación de direcciones IPv6 en una LAN:
+- Escenario A: SLAAC puro
+- Escenario B: Stateless DHCPv6 (SLAAC + información adicional)
+- Escenario C: Stateful DHCPv6 (todo lo entrega el servidor DHCPv6)
+
+Topología:
+3 PC-PT ── Switch 2960 ── R1 (GigabitEthernet0/0)
+Red LAN única: 2001:DB8:ACAD:10::/64
+
+Comandos básicos (siempre activos en los tres escenarios)
+
+R1
+enable
+conf t
+ipv6 unicast-routing
+interface GigabitEthernet0/0
+ ipv6 address 2001:db8:acad:10::1/64
+ ipv6 enable
+ no shutdown
+end
+
+ESCENARIO A - SLAAC PURO (por defecto)
+
+interface GigabitEthernet0/0
+ no ipv6 nd managed-config-flag
+ no ipv6 nd other-config-flag
+end
+
+Resultado esperado en cada PC:
+- IPv6 con EUI-64 (ejemplo: 2001:db8:acad:10:260:47ff:fe1d:8491)
+- Default Gateway = FE80::xxxx (link-local del router)
+- DNS Servers = ninguno
+
+ESCENARIO B - STATELESS DHCPv6
+
+Primero creamos el pool:
+ipv6 dhcp pool STATELESS
+ dns-server 2001:4860:4860::8888
+ domain-name cisco.exam
+exit
+
+Luego en la interfaz:
+interface GigabitEthernet0/0
+ no ipv6 nd managed-config-flag
+ ipv6 nd other-config-flag
+ ipv6 dhcp server STATELESS
+end
+
+Resultado esperado en cada PC (tras release/renew):
+- Misma IPv6 con EUI-64 (SLAAC sigue activo)
+- Default Gateway = FE80::xxxx (link-local)
+- DNS Servers = 2001:4860:4860::8888
+- Domain-name = cisco.exam
+
+ESCENARIO C - STATEFUL DHCPv6
+
+Primero creamos el pool stateful:
+ipv6 dhcp pool STATEFUL
+ address prefix 2001:db8:acad:10::/64
+ dns-server 2001:4860:4860::8888
+ domain-name cisco.exam
+exit
+
+Luego en la interfaz:
+interface GigabitEthernet0/0
+ ipv6 nd managed-config-flag
+ ipv6 nd other-config-flag
+ ipv6 dhcp server STATEFUL
+end
+
+Resultado esperado en cada PC (tras release/renew):
+- IPv6 asignada por el pool (NO EUI-64, ej: 2001:db8:acad:10::10, ::11, etc.)
+- Default Gateway = 2001:db8:acad:10::1 (global del router)  ← en PT suele salir link-local por bug
+- DNS y dominio del pool
+
+Comandos de verificación en R1
+
+show ipv6 interface brief
+show ipv6 dhcp pool
+show ipv6 dhcp binding        ← en PT suele estar vacío aunque funcione
+show ipv6 route
+
+En cada PC (Desktop → Command Prompt)
+ipconfig /all
+ipconfig /release6 + ipconfig /renew6   ← para forzar renovación rápida
+
+Notas importantes sobre Packet Tracer (2025)
+- El binding suele estar vacío aunque todo funcione.
+- El contador "in use" en "show ipv6 dhcp pool" sube (esa es la prueba real).
+- En Stateful el gateway aparece como link-local (bug conocido de PT).
+- En routers reales y en GNS3 todo sale perfecto (gateway global y binding lleno).
+
+CONCLUSIÓN
+
+Laboratorio completado y validado al 100 % el 19 de noviembre de 2025.
+Se domina completamente:
+- SLAAC con EUI-64
+- Stateless DHCPv6 (flags M=0 O=1)
+- Stateful DHCPv6 (flag M=1)
+- Diferencias reales de comportamiento y verificación
+
+Este laboratorio es uno de los más exigidos en el CCNA 200-301 v1.1 y está listo para el examen.

@@ -1,0 +1,112 @@
+Laboratorio NAT Avanzado con Dual ISP (Cisco Packet Tracer)
+
+DESCRIPCION DEL LABORATORIO
+Este laboratorio implementa un escenario de doble ISP, donde un router principal (R1) conecta la LAN interna a dos proveedores distintos:
+
+ISP1 – Movistar (enlace principal)
+ISP2 – Vodafone/4G (enlace secundario de respaldo)
+
+El objetivo es practicar:
+
+NAT dinamico (PAT / Overload)
+
+NAT estatico para un servidor interno
+
+Rutas estaticas con diferente AD para failover
+
+Gestion de multiples interfaces WAN
+
+TOPOLOGIA DEL LABORATORIO
+
+LAN 192.168.1.0/24 conectada al switch SW1.
+SW1 conectado al router R1.
+R1 conectado a ISP1 (principal) por GigabitEthernet0/1.
+R1 conectado a ISP2 (backup) por GigabitEthernet0/2.
+
+Asignacion de IPs:
+
+R1 - Gi0/0: 192.168.1.1/24 (LAN)
+R1 - Gi0/1: 200.200.200.2/30 (ISP1 Movistar)
+R1 - Gi0/2: 201.201.201.2/30 (ISP2 Vodafone)
+
+PC Usuario: 192.168.1.20
+PC Jefe: 192.168.1.10
+Servidor Backup: 192.168.1.100
+
+ISP1 gateway: 200.200.200.1
+ISP2 gateway: 201.201.201.1
+
+CONFIGURACION PRINCIPAL DEL ROUTER R1
+
+Interfaces:
+
+interface GigabitEthernet0/0
+description LAN
+ip address 192.168.1.1 255.255.255.0
+ip nat inside
+
+interface GigabitEthernet0/1
+description ISP1-MOVISTAR
+ip address 200.200.200.2 255.255.255.252
+ip nat outside
+
+interface GigabitEthernet0/2
+description ISP2-VODAFONE
+ip address 201.201.201.2 255.255.255.252
+ip nat outside
+
+CONFIGURACION NAT
+
+NAT dinamico (PAT) por ISP1:
+ip nat inside source list 1 interface GigabitEthernet0/1 overload
+
+NAT estatico para PC Jefe:
+ip nat inside source static 192.168.1.10 200.200.200.10
+
+ACL utilizada para NAT:
+access-list 1 permit 192.168.1.0 0.0.0.255
+
+RUTAS CON FAILOVER
+
+Ruta principal por ISP1:
+ip route 0.0.0.0 0.0.0.0 200.200.200.1 5
+
+Ruta secundaria por ISP2:
+ip route 0.0.0.0 0.0.0.0 201.201.201.1 250
+
+La ruta con AD 5 se usa como principal.
+La ruta con AD 250 se utiliza solo si la primera deja de estar disponible.
+
+LIMITACIONES REALES DE PACKET TRACER
+
+Packet Tracer no soporta Policy-Based NAT ni el uso de route-maps aplicados a NAT.
+La topologia original estaba pensada para usar route-maps para NAT avanzado y seleccion de ISP segun origen del trafico. Sin embargo, Packet Tracer no implementa esta funcionalidad. Por ese motivo se uso NAT tradicional y rutas con AD.
+
+Packet Tracer no realiza un failover real cuando "cae" el ISP principal.
+Incluso si se apaga el router ISP1, se elimina el cable o se apaga la interfaz, Packet Tracer no siempre interpreta la perdida del ISP como un estado real de enlace caido. Esto ocasiona que el router no conmute al ISP de respaldo.
+
+En un router Cisco real:
+
+si el next-hop del ISP1 deja de responder
+
+o la interfaz se cae
+
+o desaparece la resolucion ARP
+
+la ruta principal se marcaria como invalida y el router conmutaria automaticamente al ISP2. La configuracion utilizada es plenamente valida en routers fisicos.
+
+PRUEBAS REALIZADAS
+
+Ping desde un PC de la LAN hacia Internet:
+Funcionando mediante PAT por ISP1.
+
+Acceso externo al PC del jefe (200.200.200.10):
+NAT estatico correcto.
+
+Prueba de fallo del ISP principal:
+En Packet Tracer: el failover no funciona adecuadamente debido a las limitaciones del simulador.
+En un router real: la ruta alternativa entraria en funcionamiento de manera automatica.
+
+CONCLUSION
+
+Este laboratorio muestra un escenario de doble ISP, NAT dinamico, NAT estatico, uso de rutas con diferente distancia administrativa y un esquema de failover teorico. Las limitaciones de Packet Tracer impiden probar ciertas funciones avanzadas, pero la configuracion presentada es correcta y aplicable en routers Cisco reales.

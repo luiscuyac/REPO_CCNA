@@ -1,0 +1,56 @@
+============================================================
+LABORATORIO - DHCP SNOOPING + DYNAMIC ARP INSPECTION
+============================================================
+
+DISPOSITIVOS:
+- R-DHCP (Router como DHCP Server y Gateway)
+- SW1-SECURITY (Switch de Acceso con Seguridad L2)
+- PC-GERENCIA (VLAN 10)
+- PC-RRHH (VLAN 20)
+- LAPTOP-ROGUE (VLAN 10, Usado para pruebas de ataque)
+
+OBJETIVOS DEL LABORATORIO:
+1.  Implementar dos VLANs (VLAN 10: GERENCIA, VLAN 20: RRHH) con enrutamiento Inter-VLAN a través de interfaces físicas separadas.
+2.  Configurar el servicio DHCP en el router para ambas VLANs.
+3.  Implementar la seguridad de Capa 2 (L2):
+    - DHCP Snooping: Prevenir servidores DHCP no autorizados.
+    - Dynamic ARP Inspection (DAI): Prevenir ataques ARP Spoofing.
+    - BPDU Guard y PortFast: Proteger los puertos de acceso de usuario.
+
+============================================================
+CONFIGURACION DE DISPOSITIVOS
+============================================================
+
+--- CONFIGURACION R-DHCP (GATEWAYS Y DHCP SERVER) ---
+- Interfaz G0/0/0: 192.168.10.1/24 (Gateway VLAN 10)
+- Interfaz G0/0/1: 192.168.20.1/24 (Gateway VLAN 20)
+- MAC G0/0/0 (VLAN 10): 0060.5c6e.4a01
+- Pools DHCP: GERENCIA (192.168.10.x) y RRHH (192.168.20.x).
+
+--- CONFIGURACION SW1-SECURITY (VLANs Y L2 SECURITY) ---
+- Puertos Trusted (Confiables) para DHCP Snooping y DAI: GigabitEthernet0/1 y G0/2 (enlaces al Router).
+- Puertos Untrusted (No Confiables): F0/1, F0/2, F0/3.
+- Seguridad implementada:
+    - spanning-tree portfast/bpduguard enable (en F0/1, F0/2, F0/3)
+    - ip dhcp snooping trust/ip arp inspection trust (en G0/1, G0/2)
+    - ip dhcp snooping vlan 10,20 y ip arp inspection vlan 10,20 (Activacion)
+
+============================================================
+FALLO CRITICO Y CONCLUSION FINAL DE PACKET TRACER
+============================================================
+
+Este laboratorio NO ES FUNCIONAL en esta versión de Cisco Packet Tracer (PT) debido a fallos irresolubles en la simulación de las funciones de seguridad de Capa 2 (L2).
+
+1. FALLO DE DHCP SNOOPING:
+   - El comando "ip dhcp snooping" es defectuoso. Al activarse, bloquea todo el tráfico DHCP legítimo proveniente del router (puertos TRUSTED).
+   - CONSECUENCIA: Los hosts pierden la conectividad y la Tabla de Asignaciones (Binding Database) queda VACÍA.
+
+2. FALLO DE LAS SOLUCIONES MANUALES:
+   - Dado que la Tabla de Asignaciones es necesaria para DAI, se intentaron dos soluciones manuales, las cuales fallaron debido a las limitaciones del simulador:
+     a) **Asignaciones Estáticas:** El comando 'ip dhcp snooping binding [parámetros]' está CAPADO en el simulador y rechaza la sintaxis correcta.
+     b) **ARP ACL Estática:** Esta técnica (que no depende de Snooping) también puede fallar debido a la implementación limitada de DAI en PT.
+
+CONCLUSION FINAL:
+La configuración de R-DHCP y SW1-SECURITY es **técnicamente CORRECTA y cumple con los estándares de Cisco IOS**. El problema es un fallo de software del simulador.
+
+Para validar y probar la funcionalidad completa y la sinergia entre DHCP Snooping y DAI, es **IMPRESCINDIBLE** utilizar un simulador avanzado que use imágenes reales de Cisco IOS (como **GNS3** o **EVE-NG**) o hardware de red físico.

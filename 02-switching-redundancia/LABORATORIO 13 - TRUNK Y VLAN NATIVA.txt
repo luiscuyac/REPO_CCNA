@@ -1,0 +1,127 @@
+LABORATORIO: TRUNK Y VLAN NATIVA
+
+CONFIGURACIÓN COMPLETA + COMANDOS
+
+1. Descripción del laboratorio
+
+Este laboratorio implementa dos switches conectados mediante un enlace troncal.
+Se crean las VLAN VENTAS, FINANZAS, RRHH y la VLAN 99 como nativa.
+Los PCs están distribuidos en ambos switches y deben comunicarse únicamente dentro de su VLAN.
+
+2. Topología del laboratorio (texto plano)
+
+PC1 (192.168.1.10, VLAN 10 VENTAS) → SW1 F0/1
+PC2 (192.168.1.20, VLAN 20 FINANZAS) → SW1 F0/2
+PC3 (192.168.1.30, VLAN 30 RRHH) → SW1 F0/3
+
+SW1 F0/24 —— TRUNK —— SW2 F0/24
+
+PC4 (192.168.1.11, VLAN 10 VENTAS) → SW2 F0/1
+PC5 (192.168.1.21, VLAN 20 FINANZAS) → SW2 F0/2
+PC6 (192.168.1.31, VLAN 30 RRHH) → SW2 F0/3
+
+3. VLANs utilizadas
+
+VLAN 10 – VENTAS
+VLAN 20 – FINANZAS
+VLAN 30 – RRHH
+VLAN 99 – NATIVA
+
+4. COMANDOS NECESARIOS PARA CONFIGURAR EL LABORATORIO
+4.1 Crear las VLAN con nombres (en ambos switches)
+vlan 10
+ name VENTAS
+vlan 20
+ name FINANZAS
+vlan 30
+ name RRHH
+vlan 99
+ name NATIVA
+exit
+
+4.2 Configurar puertos de acceso (SW1)
+interface fastEthernet0/1
+ switchport mode access
+ switchport access vlan 10
+exit
+
+interface fastEthernet0/2
+ switchport mode access
+ switchport access vlan 20
+exit
+
+interface fastEthernet0/3
+ switchport mode access
+ switchport access vlan 30
+exit
+
+4.3 Configurar puertos de acceso (SW2)
+interface fastEthernet0/1
+ switchport mode access
+ switchport access vlan 10
+exit
+
+interface fastEthernet0/2
+ switchport mode access
+ switchport access vlan 20
+exit
+
+interface fastEthernet0/3
+ switchport mode access
+ switchport access vlan 30
+exit
+
+4.4 Configurar el puerto TRUNK en SW1
+interface fastEthernet0/24
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 10,20,30,99
+ switchport mode trunk
+exit
+
+4.5 Configurar el puerto TRUNK en SW2
+interface fastEthernet0/24
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 10,20,30,99
+ switchport mode trunk
+exit
+
+4.6 Comandos de verificación
+
+Ver VLANs creadas:
+
+show vlan brief
+
+
+Ver el trunk:
+
+show interfaces trunk
+
+
+Ver puerto específico:
+
+show running-config interface f0/24
+
+
+Ver spanning-tree por VLAN (opcional):
+
+show spanning-tree vlan 10
+
+
+Probar conectividad:
+
+ping 192.168.1.11   (desde PC1 a PC4)
+ping 192.168.1.21   (desde PC2 a PC5)
+ping 192.168.1.31   (desde PC3 a PC6)
+
+
+5. Objetivo logrado
+
+VLANs creadas.
+
+Trunk funcional.
+
+VLAN nativa cambiada a 99.
+
+Comunicación entre VLANs separada.
+
+PCs del mismo departamento se comunican entre switches.

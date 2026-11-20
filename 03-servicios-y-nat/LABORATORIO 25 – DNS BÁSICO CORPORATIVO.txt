@@ -1,0 +1,43 @@
+LABORATORIO – DNS BÁSICO CORPORATIVO
+Autor: Luis Cuya
+Estado: 100 % CERRADO Y FUNCIONAL
+
+TOPOLOGÍA
+
+R1-MASTER (Lo0 1.1.1.1) —— 10.0.0.0/30 —— R2-CORE (Lo0 2.2.2.2) —— 10.0.0.4/30 —— R3-EDGE (Lo0 3.3.3.3)
+
+—— 10.0.0.8/30 —— SERVER-DNS (10.0.0.10)
+
+FUNCIONALIDAD CONSEGUIDA
+
+Servidor DNS interno 100 % operativo (en PC por limitación de Packet Tracer)
+Resolución de nombres FQDN desde los tres routers y cualquier PC
+Múltiples nombres apuntando al mismo servidor físico (práctica real en pymes)
+Conectividad total entre todos los dispositivos (incluidos Loopbacks)
+
+REGISTROS DNS CREADOS (todos apuntan a 10.0.0.10)
+camaras.cuya.es
+correo.cuya.es
+erp.cuya.es
+intranet.cuya.es
+
+CONFIGURACIÓN CLAVE
+
+PC SERVER-DNS
+IP:            10.0.0.10
+Máscara:       255.255.255.252
+Gateway:       10.0.0.9
+Servicio DNS:  ON + registros añadidos
+En los tres routers (R1, R2, R3)
+ip name-server 10.0.0.10
+
+RUTEO
+
+Rutas estáticas /32 hacia Loopbacks + rutas estáticas hacia redes /30.
+Todo reachable desde cualquier punto.
+
+LIMITACIONES PACKET TRACER SUPERADAS
+
+Comando “ip dns server” no existe en imagen 2911 capada → solución: PC como servidor DNS
+El PC necesita gateway configurado para devolver respuestas DNS
+Los registros deben apuntar a IPs alcanzables dentro del laboratorio

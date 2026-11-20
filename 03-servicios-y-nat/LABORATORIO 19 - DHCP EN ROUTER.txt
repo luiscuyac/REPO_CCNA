@@ -1,0 +1,114 @@
+LABORATORIO: DHCP EN ROUTER
+
+OBJETIVO:
+Configurar un router Cisco para funcionar como servidor DHCP y asignar direcciones IP automáticamente a los clientes de la LAN.
+
+EQUIPO UTILIZADO:
+
+Router Cisco 2911 (o equivalente en Packet Tracer)
+
+Switch capa 2
+
+PCs conectados a la LAN
+
+TOPOLOGÍA:
+PCs --- Switch --- Router (G0/0)
+
+DESCRIPCIÓN:
+En este laboratorio el router actúa como servidor DHCP para la red 192.168.10.0/24.
+Se configuró un rango excluido para direcciones estáticas y se creó un pool llamado LAN1 que asigna gateway, DNS y dominio.
+
+CONFIGURACIÓN FINAL DEL ROUTER
+
+version 15.1
+service password-encryption
+hostname R_DHCP
+
+enable secret 5 $1$mERr$5.a6P4JqbNiMX01usIfka/
+
+ip dhcp excluded-address 192.168.10.1 192.168.10.10
+
+ip dhcp pool LAN1
+network 192.168.10.0 255.255.255.0
+default-router 192.168.10.1
+dns-server 8.8.8.8
+domain-name produccion.com
+
+ip cef
+no ipv6 cef
+
+no ip domain-lookup
+spanning-tree mode pvst
+
+interface GigabitEthernet0/0
+ip address 192.168.10.1 255.255.255.0
+duplex auto
+speed auto
+
+interface GigabitEthernet0/1
+no ip address
+shutdown
+
+interface GigabitEthernet0/2
+no ip address
+shutdown
+
+interface Vlan1
+no ip address
+shutdown
+
+ip classless
+ip flow-export version 9
+
+banner motd "Acceso solo para tecnicos certificados"
+
+line con 0
+password 7 0822455D0A16
+login
+
+line vty 0 4
+password 7 0822455D0A16
+login
+transport input ssh
+
+line vty 5 15
+password 7 0822455D0A16
+login
+transport input ssh
+
+end
+
+VERIFICACIONES RECOMENDADAS
+
+show ip dhcp binding
+show ip dhcp pool
+show ip interface brief
+ping entre PCs y hacia 192.168.10.1
+
+COMANDOS USADOS
+
+(1) Crear excepciones del DHCP
+ip dhcp excluded-address 192.168.10.1 192.168.10.10
+
+(2) Crear el pool DHCP
+ip dhcp pool LAN1
+
+(3) Definir la red del pool
+network 192.168.10.0 255.255.255.0
+
+(4) Configurar puerta de enlace
+default-router 192.168.10.1
+
+(5) Configurar DNS
+dns-server 8.8.8.8
+
+(6) Configurar nombre de dominio (solo para DHCP)
+domain-name produccion.com
+
+(7) Asignar IP a la interfaz que sirve DHCP
+interface g0/0
+ip address 192.168.10.1 255.255.255.0
+no shut
+
+RESULTADO:
+Los equipos de la LAN reciben IP automáticamente y el router funciona como servidor DHCP en la red 192.168.10.0/24.

@@ -1,0 +1,120 @@
+LABORATORIO: Copia y restauración de configuraciones mediante TFTP
+Autor: Luis Eduardo Cuya Carranza
+Fecha: 28/10/2025
+Curso: CCNA – Respaldo y Restauración de Configuraciones
+Software: Cisco Packet Tracer 8.2.2.0400
+
+Objetivo del Laboratorio
+
+Realizar la copia de seguridad y restauración de configuraciones de routers Cisco utilizando un servidor TFTP dentro de Packet Tracer.
+El propósito es simular un entorno donde el router principal (R_PRINCIPAL) tiene una configuración establecida y se transfiere al router de respaldo (R_BACKUP) a través de un servidor TFTP.
+
+Topología de Red
+
+R_PRINCIPAL --- SW1 --- SERVIDOR TFTP --- R_BACKUP
+
+Nota: Se utiliza un único switch central; todos los dispositivos están en la misma VLAN/subred 192.168.10.0/24.
+
+Asignación de Direcciones IP
+
+Dispositivo 	Interfaz 	Dirección IP 	Máscara 	Descripción
+
+R_PRINCIPAL 	Fa0/0 		192.168.10.1 	255.255.255.0 	Router principal / gateway del servidor
+R_BACKUP 	Fa0/0 		192.168.10.2 	255.255.255.0 	Router de respaldo (receptor)
+Servidor TFTP 	NIC 		192.168.10.100 	255.255.255.0 	Servidor de respaldo TFTP
+
+
+Configuración completa de R_PRINCIPAL
+
+hostname R_PRINCIPAL
+enable secret cisco123
+interface FastEthernet0/0
+ip address 192.168.10.1 255.255.255.0
+no shutdown
+interface FastEthernet0/1
+no ip address
+shutdown
+banner motd ^C"USO EXCLUSIVO PARA BACKUP"^C
+line vty 0 4
+password cisco
+login
+end
+
+Guardar configuración:
+copy running-config startup-config
+
+Configuración inicial de R_BACKUP (antes de restaurar)
+
+hostname R_BACKUP
+interface FastEthernet0/0
+ip address 192.168.10.2 255.255.255.0
+no shutdown
+line vty 0 4
+password cisco
+login
+end
+
+Guardar configuración mínima:
+copy running-config startup-config
+
+Configuración del Servidor TFTP
+
+IP: 192.168.10.100 /24
+Activar el servicio TFTP en la pestaña Services > TFTP del servidor de Packet Tracer.
+Verificar conectividad con los routers (ping).
+
+Copia de seguridad desde R_PRINCIPAL al servidor TFTP
+
+copy running-config tftp:
+Address or name of remote host []? 192.168.10.100
+Destination filename [R_PRINCIPAL-confg]? R_PRINCIPAL_BACKUP
+
+Esperar confirmación de transferencia exitosa.
+Verificar en el servidor que el archivo R_PRINCIPAL_BACKUP esté almacenado.
+
+Restauración de configuración en R_BACKUP
+
+Si se quiere simular un reemplazo de equipo:
+erase startup-config
+reload
+
+Luego reconfigurar temporalmente la IP si es necesario:
+configure terminal
+interface FastEthernet0/0
+ip address 192.168.10.2 255.255.255.0
+no shutdown
+end
+
+Restaurar configuración desde TFTP:
+copy tftp: running-config
+Address or name of remote host []? 192.168.10.100
+Source filename []? R_PRINCIPAL_BACKUP
+Destination filename [running-config]?
+
+Guardar definitivamente:
+copy running-config startup-config
+
+Comandos de verificación
+
+show ip interface brief
+show running-config
+show startup-config
+ping 192.168.10.100
+copy running-config startup-config
+
+Notas importantes
+
+Evitar conflicto de IPs: mantener diferentes direcciones para R_PRINCIPAL y R_BACKUP.
+
+El servicio TFTP debe estar habilitado antes de iniciar la copia.
+
+Verificar conectividad mediante ping antes de transferir archivos.
+
+El protocolo TFTP no tiene autenticación; usar solo en redes seguras.
+
+Siempre guardar la configuración restaurada con copy running-config startup-config.
+
+Conclusión
+
+El laboratorio demuestra cómo realizar copias de respaldo y restauración de configuraciones en routers Cisco mediante TFTP usando solo Packet Tracer.
+Esta práctica es esencial para administradores de red que deseen mantener configuraciones de respaldo, restaurar equipos o clonar configuraciones de forma controlada.

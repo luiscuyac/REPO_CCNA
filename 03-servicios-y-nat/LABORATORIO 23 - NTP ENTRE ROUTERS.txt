@@ -1,0 +1,80 @@
+LABORATORIO - NTP CORPORATIVO AUTENTICADO (Packet Tracer)
+Topología
+
+R1-MASTER (Loopback 1.1.1.1) --- 10.0.0.0/30 --- R2-SLAVE (Loopback 2.2.2.2) --- 10.0.0.4/30 --- R3-CLIENT-PRO (Loopback 3.3.3.3)
+
+Objetivo
+Configurar un servidor NTP maestro interno con autenticación MD5 y clientes que se sincronicen usando la Loopback permanente del master.
+
+Configuración completa
+
+R1-MASTER (Servidor NTP Master - Stratum 2)
+
+hostname R1-MASTER
+clock timezone CET 1
+interface Loopback0
+description SERVER NTP MASTER
+ip address 1.1.1.1 255.255.255.255
+interface GigabitEthernet0/0
+ip address 10.0.0.1 255.255.255.252
+no shutdown
+ip route 10.0.0.4 255.255.255.252 10.0.0.2
+ip route 2.2.2.2 255.255.255.255 10.0.0.2
+ip route 3.3.3.3 255.255.255.255 10.0.0.2
+ntp authentication-key 1 md5 0822455D0A16544541 7
+ntp authenticate
+ntp trusted-key 1
+ntp master 2
+
+R2-CLIENT (Cliente NTP Básico)
+
+hostname R2-CLIENT
+clock timezone CET 1
+interface Loopback0
+ip address 2.2.2.2 255.255.255.255
+interface GigabitEthernet0/0
+ip address 10.0.0.2 255.255.255.252
+no shutdown
+interface GigabitEthernet0/1
+ip address 10.0.0.5 255.255.255.252
+no shutdown
+ip route 1.1.1.1 255.255.255.255 10.0.0.1
+ip route 3.3.3.3 255.255.255.255 10.0.0.6
+ntp authentication-key 1 md5 0822455D0A16544541 7
+ntp authenticate
+ntp trusted-key 1
+ntp server 1.1.1.1
+
+R3-CLIENT-PRO (Cliente NTP PRO)
+
+hostname R3-CLIENT-PRO
+clock timezone CET 1
+interface Loopback0
+ip address 3.3.3.3 255.255.255.255
+interface GigabitEthernet0/0
+ip address 10.0.0.6 255.255.255.252
+no shutdown
+ip route 1.1.1.1 255.255.255.255 10.0.0.5
+ip route 2.2.2.2 255.255.255.255 10.0.0.5
+ip route 10.0.0.0 255.255.255.252 10.0.0.5
+ntp authentication-key 1 md5 0822455D0A16544541 7
+ntp authenticate
+ntp trusted-key 1
+ntp server 1.1.1.1
+Verificación (todo correcto)
+
+R1-MASTER# sh ntp status
+Clock is synchronized, stratum 2, reference is 127.127.1.1
+
+R2-CLIENT# sh ntp status
+Clock is synchronized, stratum 3, reference is 10.0.0.1
+
+R3-CLIENT-PRO# sh ntp status
+Clock is synchronized, stratum 3, reference is 10.0.0.1
+
+Notas
+
+Clave MD5: Cisco123 (cifrada en el show run)
+Se usan rutas estáticas porque es PT capado
+Los clientes apuntan a la Loopback permanente 1.1.1.1 del master
+Funciona 100 % aunque PT no tenga ntp source ni prefer

@@ -1,0 +1,83 @@
+LABORATORIO – PORT SECURITY
+
+Autor: Luis Cuya
+
+Estado: CERRADO
+
+TOPOLOGÍA
+
+SW1 (2960-24TT)
+
+Fa0/1 → PC-FINANZAS (VLAN 10)
+Fa0/2 → PC-ADMIN (VLAN 20)
+Fa0/3 → PC-COMERCIAL (VLAN 30)
+Fa0/4 → PC-ALMACEN (VLAN 40)
+Fa0/5 → IMPRESORA (VLAN 10 – MAC fija)
+Fa0/10 → TRUNK opcional al router
+
+OBJETIVO
+Proteger puertos de usuario contra dispositivos no autorizados y MAC spoofing.
+CONFIGURACIÓN
+Puertos de usuario (Fa0/1 a Fa0/4)
+
+máximo 2 MACs
+sticky learning
+violation → shutdown
+PortFast + BPDU Guard activados
+
+Puerto impresora (Fa0/5)
+
+máximo 1 MAC
+MAC fija: 0030.A315.320E
+violation → restrict (solo log, no apaga)
+PortFast activado
+BPDU Guard desactivado (impresoras suelen enviar BPDUs)
+Shutdown en puertos no usados y en vlan especial para no uso
+
+Trunk (Fa0/10)
+
+native vlan 999 (blackhole)
+allowed vlan 10,20,30,40
+
+CONFIGURACIÓN RELEVANTE
+
+ciscointerface range FastEthernet0/1 - 4
+ description PUERTO USUARIO -PORT SECURITY
+ switchport access vlan X
+ switchport mode access
+ switchport port-security
+ switchport port-security maximum 2
+ switchport port-security mac-address sticky
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+
+interface FastEthernet0/5
+ description IMPRESORA - MAC FIJA
+ switchport access vlan 10
+ switchport mode access
+ switchport port-security
+ switchport port-security violation restrict
+ switchport port-security mac-address 0030.A315.320E
+ spanning-tree portfast
+
+interface FastEthernet0/10
+ description TRUNK - ROUTER
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 10,20,30,40
+ switchport mode trunk
+
+interface range fa0/6 - 9, fa0/11 - 24, g0/1 - 2
+ switchport access vlan 88
+ shutdown
+
+PRUEBAS
+
+PC normal → funciona
+Enchufe switch o más de 2 MACs → puerto err-disabled
+Recuperación manual con shutdown / no shutdown
+Impresora → sigue funcionando aunque envíe BPDUs
+
+PT CAPADO
+
+errdisable recovery cause psecure-violation
+errdisable recovery interval 30

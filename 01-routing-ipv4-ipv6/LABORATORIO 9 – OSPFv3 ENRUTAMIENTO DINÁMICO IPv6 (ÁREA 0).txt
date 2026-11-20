@@ -1,0 +1,191 @@
+LABORATORIO: OSPFv3 ENRUTAMIENTO DINÁMICO IPv6 (ÁREA 0)
+
+Este laboratorio implementa OSPFv3 para IPv6 usando tres routers Cisco 2911 conectados en serie (R1 – R2 – R3).
+Cada router posee una red LAN propia y participa en el proceso OSPFv3 número 1, en el Área 0.
+
+TOPOLOGIA
+
+R1 ---- R2 ---- R3
+LAN_1 LAN_2 LAN_3
+
+LAN_1: 2001:DB8:1::/64
+LAN_2: 2001:DB8:2::/64
+LAN_3: 2001:DB8:3::/64
+
+ENLACE_R1_R2: 2001:DB8:12::/64
+ENLACE_R2_R3: 2001:DB8:23::/64
+
+Cada router usa un router-id distinto:
+R1 → 1.1.1.1
+R2 → 2.2.2.2
+R3 → 3.3.3.3
+
+COMANDOS PRINCIPALES DEL LABORATORIO
+
+ip cef
+ipv6 cef
+ipv6 unicast-routing
+
+ipv6 router ospf 1
+router-id X.X.X.X
+
+En cada interfaz:
+ipv6 address X::X/64
+ipv6 address FE80::X link-local
+ipv6 ospf 1 area 0
+
+Guardar configuración:
+copy running-config startup-config
+
+CONFIGURACION COMPLETA DE R1
+
+enable
+configure terminal
+hostname R1
+no ip domain-lookup
+service password-encryption
+
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+
+interface GigabitEthernet0/0
+ipv6 address FE80::1 link-local
+ipv6 address 2001:DB8:1::1/64
+ipv6 ospf 1 area 0
+no shutdown
+
+interface Serial0/0/0
+ipv6 address FE80::1 link-local
+ipv6 address 2001:DB8:12::1/64
+ipv6 ospf 1 area 0
+clock rate 2000000
+no shutdown
+
+interface Serial0/0/1
+shutdown
+
+ipv6 router ospf 1
+router-id 1.1.1.1
+log-adjacency-changes
+
+banner motd "Acceso denegado a personas ajenas al equipo CCNA"
+
+line con 0
+password cisco
+login
+
+line vty 0 4
+password cisco
+login
+transport input ssh
+
+end
+copy running-config startup-config
+
+CONFIGURACION COMPLETA DE R2
+
+enable
+configure terminal
+hostname R2
+no ip domain-lookup
+service password-encryption
+
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+
+interface GigabitEthernet0/0
+ipv6 address FE80::2 link-local
+ipv6 address 2001:DB8:2::1/64
+ipv6 ospf 1 area 0
+no shutdown
+
+interface Serial0/0/0
+ipv6 address FE80::2 link-local
+ipv6 address 2001:DB8:12::2/64
+ipv6 ospf 1 area 0
+no shutdown
+
+interface Serial0/0/1
+ipv6 address FE80::2 link-local
+ipv6 address 2001:DB8:23::1/64
+ipv6 ospf 1 area 0
+clock rate 2000000
+no shutdown
+
+ipv6 router ospf 1
+router-id 2.2.2.2
+log-adjacency-changes
+
+banner motd "Acceso denegado a personas ajenas al equipo CCNA"
+
+line con 0
+password cisco
+login
+
+line vty 0 4
+password cisco
+login
+transport input ssh
+
+end
+copy running-config startup-config
+
+CONFIGURACION COMPLETA DE R3
+
+enable
+configure terminal
+hostname R3
+no ip domain-lookup
+service password-encryption
+
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+
+interface GigabitEthernet0/0
+ipv6 address FE80::3 link-local
+ipv6 address 2001:DB8:3::1/64
+ipv6 ospf 1 area 0
+no shutdown
+
+interface Serial0/0/1
+ipv6 address FE80::3 link-local
+ipv6 address 2001:DB8:23::2/64
+ipv6 ospf 1 area 0
+no shutdown
+
+ipv6 router ospf 1
+router-id 3.3.3.3
+log-adjacency-changes
+
+banner motd "Acceso denegado a personas ajenas al equipo CCNA"
+
+line con 0
+password cisco
+login
+
+line vty 0 4
+password cisco
+login
+transport input ssh
+
+end
+copy running-config startup-config
+
+PRUEBAS DE CONECTIVIDAD
+
+Verificar vecinos OSPFv3
+show ipv6 ospf neighbor
+
+Verificar tabla de enrutamiento
+show ipv6 route
+
+Probar conectividad entre PCs
+Desde PC1:
+ping 2001:DB8:2::10
+ping 2001:DB8:3::10
+
+Probar conectividad entre routers
+ping FE80::X%INTERFACE

@@ -1,0 +1,170 @@
+LABORATORIO RIP v2 – ENRUTAMIENTO DINÁMICO ENTRE 3 ROUTERS
+
+OBJETIVO:
+Configurar tres routers Cisco 2811 con el protocolo de enrutamiento dinámico RIP versión 2 (RIPv2), para permitir la comunicación entre tres redes LAN distintas sin usar rutas estáticas.
+
+TOPOLOGÍA:
+R1 — R2 — R3
+Cada router conectado a una red LAN independiente con su respectiva PC.
+
+REDES:
+LAN 1: 192.168.1.0/24
+LAN 2: 192.168.2.0/24
+LAN 3: 192.168.3.0/24
+Enlace R1-R2: 10.0.0.0/30
+Enlace R2-R3: 10.0.0.4/30
+
+CONFIGURACIÓN DE R1
+
+enable
+configure terminal
+hostname R1
+no ip domain-lookup
+enable secret cisco123
+service password-encryption
+
+interface fastEthernet0/0
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+
+interface serial0/0/0
+ip address 10.0.0.1 255.255.255.252
+clock rate 64000
+no shutdown
+
+router rip
+version 2
+network 10.0.0.0
+network 192.168.1.0
+no auto-summary
+
+banner motd #"Acceso restringido: Solo personal autorizado"#
+
+line console 0
+password cisco
+login
+
+line vty 0 4
+password cisco
+login
+transport input ssh
+
+exit
+copy running-config startup-config
+reload
+
+CONFIGURACIÓN DE R2
+
+enable
+configure terminal
+hostname R2
+no ip domain-lookup
+enable secret cisco123
+service password-encryption
+
+interface fastEthernet0/0
+ip address 192.168.2.1 255.255.255.0
+no shutdown
+
+interface serial0/0/0
+ip address 10.0.0.2 255.255.255.252
+no shutdown
+
+interface serial0/0/1
+ip address 10.0.0.5 255.255.255.252
+clock rate 64000
+no shutdown
+
+router rip
+version 2
+network 10.0.0.0
+network 192.168.2.0
+no auto-summary
+
+banner motd #"Acceso restringido: Solo personal autorizado"#
+
+line console 0
+password cisco
+login
+
+line vty 0 4
+password cisco
+login
+transport input ssh
+
+exit
+copy running-config startup-config
+reload
+
+CONFIGURACIÓN DE R3
+
+enable
+configure terminal
+hostname R3
+no ip domain-lookup
+enable secret cisco123
+service password-encryption
+
+interface fastEthernet0/0
+ip address 192.168.3.1 255.255.255.0
+no shutdown
+
+interface serial0/0/1
+ip address 10.0.0.6 255.255.255.252
+no shutdown
+
+router rip
+version 2
+network 10.0.0.0
+network 192.168.3.0
+no auto-summary
+
+banner motd #"Acceso restringido: Solo personal autorizado"#
+
+line console 0
+password cisco
+login
+
+line vty 0 4
+password cisco
+login
+transport input ssh
+
+exit
+copy running-config startup-config
+reload
+
+CONFIGURACIÓN DE LAS PCS
+
+PC1
+IP: 192.168.1.10
+Máscara: 255.255.255.0
+Puerta de enlace: 192.168.1.1
+
+PC2
+IP: 192.168.2.10
+Máscara: 255.255.255.0
+Puerta de enlace: 192.168.2.1
+
+PC3
+IP: 192.168.3.10
+Máscara: 255.255.255.0
+Puerta de enlace: 192.168.3.1
+
+VERIFICACIONES
+
+Comprobar conectividad entre routers con el comando:
+ping 10.0.0.x
+
+Revisar la tabla de enrutamiento:
+show ip route
+
+Observar la actualización de rutas:
+debug ip rip
+
+Detener la depuración:
+undebug all
+
+Probar conectividad extremo a extremo entre las tres PCs.
+
+FIN DEL LABORATORIO

@@ -1,0 +1,163 @@
+LABORATORIO: RIPng (Enrutamiento Dinámico IPv6)
+
+Objetivo:
+Configurar el protocolo RIPng en tres routers interconectados para permitir la comunicación entre redes IPv6.
+
+Topología:
+PISO1 conectado a PISO2 mediante el enlace 2001:DB8:12::/64
+PISO2 conectado a PISO3 mediante el enlace 2001:DB8:23::/64
+Cada router tiene su red LAN:
+PISO1 → 2001:DB8:1::/64
+PISO2 → 2001:DB8:2::/64
+PISO3 → 2001:DB8:3::/64
+
+Comandos configurados por router:
+
+ROUTER PISO1
+
+enable
+configure terminal
+hostname PISO1
+no ip domain-lookup
+service password-encryption
+banner motd #"Acceso restringido a soporte tecnico"#
+
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+
+interface GigabitEthernet0/0
+ipv6 address FE80::1 link-local
+ipv6 address 2001:DB8:1::1/64
+ipv6 rip CCNA enable
+no shutdown
+
+interface Serial0/0/0
+ipv6 address FE80::1 link-local
+ipv6 address 2001:DB8:12::1/64
+ipv6 rip CCNA enable
+clock rate 2000000
+no shutdown
+
+ipv6 router rip CCNA
+
+line con 0
+password cisco
+login
+
+line vty 0 4
+password cisco
+login
+transport input ssh
+
+copy running-config startup-config
+reload
+
+ROUTER PISO2
+
+enable
+configure terminal
+hostname PISO2
+no ip domain-lookup
+service password-encryption
+banner motd #"Acceso restringido a soporte tecnico"#
+
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+
+interface GigabitEthernet0/0
+ipv6 address FE80::2 link-local
+ipv6 address 2001:DB8:2::1/64
+ipv6 rip CCNA enable
+no shutdown
+
+interface Serial0/0/0
+ipv6 address FE80::2 link-local
+ipv6 address 2001:DB8:12::2/64
+ipv6 rip CCNA enable
+no shutdown
+
+interface Serial0/0/1
+ipv6 address FE80::2 link-local
+ipv6 address 2001:DB8:23::1/64
+ipv6 rip CCNA enable
+clock rate 2000000
+no shutdown
+
+ipv6 router rip CCNA
+
+line con 0
+password cisco
+login
+
+line vty 0 4
+password cisco
+login
+transport input ssh
+
+copy running-config startup-config
+reload
+
+ROUTER PISO3
+
+enable
+configure terminal
+hostname PISO3
+no ip domain-lookup
+service password-encryption
+banner motd #"Acceso restringido a soporte tecnico"#
+
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+
+interface GigabitEthernet0/0
+ipv6 address FE80::3 link-local
+ipv6 address 2001:DB8:3::1/64
+ipv6 rip CCNA enable
+no shutdown
+
+interface Serial0/0/1
+ipv6 address FE80::3 link-local
+ipv6 address 2001:DB8:23::2/64
+ipv6 rip CCNA enable
+no shutdown
+
+ipv6 router rip CCNA
+
+line con 0
+password cisco
+login
+
+line vty 0 4
+password cisco
+login
+transport input ssh
+
+copy running-config startup-config
+reload
+
+PRUEBAS DE CONECTIVIDAD
+
+Verificar las interfaces activas:
+show ipv6 interface brief
+
+Verificar vecinos RIPng:
+show ipv6 rip
+
+Verificar la base de datos de rutas:
+show ipv6 rip database
+
+Verificar la tabla de enrutamiento:
+show ipv6 route
+
+Realizar pruebas de ping entre routers y entre redes LAN:
+ping 2001:DB8:1::1
+ping 2001:DB8:3::1
+
+CONCLUSIÓN
+
+El laboratorio demuestra la configuración del protocolo RIPng en tres routers Cisco 2911.
+Cada red LAN puede comunicarse mediante enrutamiento dinámico IPv6, sin necesidad de rutas estáticas.
+El protocolo intercambia rutas de manera automática y mantiene la tabla de enrutamiento actualizada en toda la red.

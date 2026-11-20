@@ -1,0 +1,124 @@
+LABORATORIO OSPF v2 - ÁREA 0
+Red de tres routers (R1, R2, R3) con tres LAN conectadas a PCs.
+Modelo de routers: Cisco 2811
+Conexión mediante enlaces seriales y FastEthernet.
+
+Objetivo:
+Configurar el protocolo de enrutamiento dinámico OSPF v2 para lograr comunicación entre tres redes LAN a través de tres routers interconectados.
+
+Topología:
+
+R1 conectado a R2 por el enlace 10.0.0.0/30
+
+R2 conectado a R3 por el enlace 10.0.0.4/30
+
+Cada router tiene su red LAN:
+R1 → 192.168.1.0/24
+R2 → 192.168.2.0/24
+R3 → 192.168.3.0/24
+
+PC1: 192.168.1.10 / Gateway 192.168.1.1
+PC2: 192.168.2.10 / Gateway 192.168.2.1
+PC3: 192.168.3.10 / Gateway 192.168.3.1
+
+Configuración de los routers:
+
+R1
+enable
+configure terminal
+hostname R1
+no ip domain-lookup
+service password-encryption
+banner motd "Acceso restringido: Solo personal autorizado"
+interface FastEthernet0/0
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+interface Serial0/0/0
+ip address 10.0.0.1 255.255.255.252
+clock rate 64000
+no shutdown
+router ospf 1
+network 192.168.1.0 0.0.0.255 area 0
+network 10.0.0.0 0.0.0.3 area 0
+line con 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+transport input ssh
+end
+copy running-config startup-config
+
+R2
+enable
+configure terminal
+hostname R2
+no ip domain-lookup
+service password-encryption
+banner motd "Acceso restringido: Solo personal autorizado"
+interface FastEthernet0/0
+ip address 192.168.2.1 255.255.255.0
+no shutdown
+interface Serial0/0/0
+ip address 10.0.0.2 255.255.255.252
+no shutdown
+interface Serial0/0/1
+ip address 10.0.0.5 255.255.255.252
+clock rate 64000
+no shutdown
+router ospf 1
+network 192.168.2.0 0.0.0.255 area 0
+network 10.0.0.0 0.0.0.3 area 0
+network 10.0.0.4 0.0.0.3 area 0
+line con 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+transport input ssh
+end
+copy running-config startup-config
+
+R3
+enable
+configure terminal
+hostname R3
+no ip domain-lookup
+service password-encryption
+banner motd "Acceso restringido: Solo personal autorizado"
+interface FastEthernet0/0
+ip address 192.168.3.1 255.255.255.0
+no shutdown
+interface Serial0/0/1
+ip address 10.0.0.6 255.255.255.252
+no shutdown
+router ospf 1
+network 192.168.3.0 0.0.0.255 area 0
+network 10.0.0.4 0.0.0.3 area 0
+line con 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+transport input ssh
+end
+copy running-config startup-config
+
+Pruebas de conectividad:
+
+Verificar tabla de enrutamiento:
+show ip route
+
+Verificar vecinos OSPF:
+show ip ospf neighbor
+
+Probar conectividad entre PCs con ping:
+Desde PC1 → ping 192.168.2.10
+Desde PC1 → ping 192.168.3.10
+Resultado esperado: conectividad completa entre las tres LANs.
+
+Conclusión:
+Este laboratorio demuestra la configuración básica de OSPF v2 en área 0 con tres routers. Cada red LAN puede comunicarse dinámicamente sin rutas estáticas, aprovechando la convergencia automática y la selección de la ruta más óptima basada en el costo de enlace.

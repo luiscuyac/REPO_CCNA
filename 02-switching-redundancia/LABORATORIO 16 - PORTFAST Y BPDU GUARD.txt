@@ -1,0 +1,116 @@
+LABORATORIO: PORTFAST Y BPDU GUARD
+
+OBJETIVO
+
+Usar PortFast para acelerar la conexión de puertos hacia PCs.
+
+Activar BPDU Guard para proteger la red de bucles y ataques STP.
+
+Observar que solo los puertos protegidos se deshabilitan cuando reciben BPDUs.
+
+Demostrar que un puerto en modo access SIN BPDU Guard no se protege.
+
+EQUIPOS USADOS
+
+1 Switch Cisco 2960-24TT (SW1)
+
+1 Switch Cisco 2960-24TT simulando un atacante (SW2)
+
+2 PCs (PC1 y PC2)
+
+TOPOLOGÍA DEL LABORATORIO
+
+PC1 ---> F0/1 (PortFast + BPDU Guard)
+PC2 ---> F0/2 (PortFast + BPDU Guard)
+SW2 ---> F0/3 (solo access mode, sin protección)
+
+PRUEBA 1:
+
+SW2 conectado a F0/3 → Funciona sin problemas (no hay BPDU Guard).
+
+PRUEBA 2:
+
+PC1 desconectado de F0/1.
+
+SW2 conectado a F0/1 → Puerto cae en ERR-DISABLED por BPDU Guard.
+
+CONFIGURACIÓN DE SW1
+
+Entrar a configuración:
+
+configure terminal
+
+Configurar puertos seguros (PC1 y PC2):
+
+interface fastEthernet0/1
+switchport mode access
+spanning-tree portfast
+spanning-tree bpduguard enable
+exit
+
+interface fastEthernet0/2
+switchport mode access
+spanning-tree portfast
+spanning-tree bpduguard enable
+exit
+
+Configurar puerto NO protegido (para la prueba):
+
+interface fastEthernet0/3
+switchport mode access
+exit
+
+COMPORTAMIENTO ESPERADO
+
+PUERTOS F0/1 y F0/2 (con PortFast + BPDU Guard):
+
+Con un PC → Suben rápido a FWD.
+
+Conectar un switch → Reciben BPDUs.
+
+Resultado → Puerto entra en ERR-DISABLED automáticamente.
+
+Motivo → Protección activa.
+
+PUERTO F0/3 (solo access, sin PortFast ni BPDU Guard):
+
+Conectar SW2 funciona normal.
+
+Recibe BPDUs pero NO se bloquea.
+
+Resultado → Puerto queda operativo sin errores.
+
+Motivo → No tiene protección.
+
+VERIFICACIÓN
+
+Estado de STP y BPDU Guard:
+
+show spanning-tree interface f0/1 detail
+show spanning-tree interface f0/2 detail
+
+Estado de puertos:
+
+show interfaces status
+
+En la prueba, F0/1 debe aparecer como err-disabled si conectas SW2.
+
+RECUPERAR PUERTO ERR-DISABLED
+
+Método manual:
+
+interface fastEthernet0/1
+shutdown
+no shutdown
+
+CONCLUSIÓN
+
+PortFast acelera la conexión de PCs.
+
+BPDU Guard protege solo los puertos donde está habilitado.
+
+Un puerto en modo access SIN BPDU Guard queda totalmente expuesto.
+
+Conectar un switch no autorizado en un puerto protegido causa su bloqueo inmediato.
+
+Conectar un switch no autorizado en un puerto sin protección permite que el atacante participe en STP sin restricciones.

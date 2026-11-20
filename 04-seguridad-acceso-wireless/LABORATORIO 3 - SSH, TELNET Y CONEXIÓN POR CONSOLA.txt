@@ -1,0 +1,159 @@
+LABORATORIO SSH, TELNET Y CONEXIÓN POR CONSOLA
+
+OBJETIVO:
+Implementar y comprobar tres métodos de administración de routers Cisco:
+
+Acceso remoto mediante TELNET.
+
+Acceso remoto mediante SSH con autenticación local.
+
+Acceso directo mediante CONSOLA (RS-232 / puerto 9600).
+
+TOPOLOGÍA:
+
+3 Routers Cisco 1841: R_TELNET, R_SSH, R_CONSOLE
+
+1 Switch Cisco 2960 (SW1)
+
+2 PCs: PC1 y PC2
+
+DIRECCIONAMIENTO IP:
+
+Dispositivo 	| Interfaz 	| Dirección IP 	| Máscara 		| Descripción
+R_TELNET 	| Fa0/0 	| 10.0.0.1 	| 255.255.255.252 	| Enlace a R_SSH
+R_TELNET 	| Fa0/1 	| 192.168.10.1 	| 255.255.255.0 	| LAN TELNET
+R_SSH 		| Fa0/0 	| 10.0.0.2 	| 255.255.255.252 	| Enlace a R_TELNET
+R_SSH 		| Fa0/1 	| 192.168.20.1 	| 255.255.255.0 	| LAN SSH
+R_CONSOLE 	| Fa0/1 	| 192.168.30.1 	| 255.255.255.0 	| LAN CONSOLE
+PC1 		| NIC 		| 192.168.10.10 | 255.255.255.0 	| Puerta de enlace 192.168.10.1
+PC2 		| NIC 		| 192.168.30.10 | 255.255.255.0 	| Puerta de enlace 192.168.30.1
+
+RUTAS ESTÁTICAS:
+
+En R_TELNET: ip route 192.168.20.0 255.255.255.0 10.0.0.2
+
+En R_SSH: ip route 192.168.10.0 255.255.255.0 10.0.0.1
+
+R_CONSOLE no requiere rutas estáticas (solo acceso local).
+
+CONFIGURACIÓN DE LOS ROUTERS
+
+- R_TELNET
+
+hostname R_TELNET
+enable secret cisco123
+service password-encryption
+
+interface FastEthernet0/0
+ip address 10.0.0.1 255.255.255.252
+no shutdown
+
+interface FastEthernet0/1
+ip address 192.168.10.1 255.255.255.0
+no shutdown
+
+ip route 192.168.20.0 255.255.255.0 10.0.0.2
+
+banner motd ^C"Uso exclusivo para laboratorio"^C
+
+line con 0
+password cisco
+login
+
+line vty 0 4
+password cisco
+login
+transport input telnet
+
+end
+copy running-config startup-config
+reload
+
+- R_SSH
+
+hostname R_SSH
+enable secret cisco123
+service password-encryption
+ip domain-name redes.local
+username admin privilege 15 secret cisco123
+crypto key generate rsa
+1024
+ip ssh version 2
+
+interface FastEthernet0/0
+ip address 10.0.0.2 255.255.255.252
+no shutdown
+
+interface FastEthernet0/1
+ip address 192.168.20.1 255.255.255.0
+no shutdown
+
+ip route 192.168.10.0 255.255.255.0 10.0.0.1
+
+banner motd ^C"Uso exclusivo para laboratorio"^C
+
+line con 0
+password cisco
+login
+
+line vty 0 4
+login local
+transport input ssh
+
+end
+copy running-config startup-config
+reload
+
+- R_CONSOLE
+
+hostname R_CONSOLE
+enable secret cisco123
+service password-encryption
+
+interface FastEthernet0/1
+ip address 192.168.30.1 255.255.255.0
+no shutdown
+
+banner motd ^C"Uso exclusivo para laboratorio"^C
+
+line con 0
+password cisco
+login
+
+line vty 0 4
+password cisco
+login
+transport input ssh
+
+end
+copy running-config startup-config
+reload
+
+
+CONEXIONES DE ADMINISTRACIÓN
+
+- Desde PC1 (red 192.168.10.0/24):
+
+TELNET a R_TELNET → telnet 192.168.10.1
+
+SSH a R_SSH → ssh -l admin 192.168.20.1
+
+- Desde PC2 (red 192.168.30.0/24):
+
+Conexión por consola al puerto RS-232 de R_CONSOLE (9600 bps, 8N1).
+
+
+VERIFICACIONES RECOMENDADAS
+
+show ip interface brief → comprobar interfaces activas
+
+show running-config → confirmar contraseñas cifradas
+
+show ip route → verificar rutas estáticas
+
+show users → ver sesiones activas Telnet/SSH
+
+show ssh → verificar sesiones SSH activas
+
+
+FIN DEL LABORATORIO

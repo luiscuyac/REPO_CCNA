@@ -1,0 +1,170 @@
+RUTAS ESTÁTICAS IPv6 ENTRE TRES ROUTERS
+
+Objetivo:
+Configurar conectividad IPv6 entre tres routers (R1, R2, R3) usando rutas estáticas.
+Cada router tiene su propia LAN y están conectados entre sí mediante enlaces seriales punto a punto.
+
+TOPOLOGÍA
+
+PC1 --- R1 --- R2 --- R3 --- PC3
+        |       |      |
+       LAN1    LAN2   LAN3
+
+
+Enlaces y direccionamiento:
+
+Enlace / LAN		Dirección de red	Prefijo	Dispositivo / Interfaz	Dirección IPv6	Link-Local
+
+LAN_R1			2001:DB8:1::/64		/64	R1 		G0/0	2001:DB8:1::1	FE80::1
+PC1			2001:DB8:1::10 (manual)						
+
+ENLACE_R1_R2 (Serial)	2001:DB8:12::/64	/64	R1 		S0/0/0	2001:DB8:12::1	FE80::1
+							R2 		S0/0/0	2001:DB8:12::2	FE80::2
+
+LAN_R2			2001:DB8:2::/64		/64	R2 		G0/0	2001:DB8:2::1	FE80::2
+PC2			2001:DB8:2::10 (manual)
+
+ENLACE_R2_R3 (Serial)	2001:DB8:23::/64	/64	R2 		S0/0/1	2001:DB8:23::1	FE80::2
+							R3 		S0/0/1	2001:DB8:23::2	FE80::3
+
+LAN_R3			2001:DB8:3::/64		/64	R3 		G0/0	2001:DB8:3::1	FE80::3
+PC3			2001:DB8:3::10 (manual)
+
+CONFIGURACIÓN DE CADA ROUTER
+
+R1
+enable
+configure terminal
+hostname R1
+no ip domain-lookup
+service password-encryption
+enable secret cisco
+banner motd "Prohibido el acceso a personas no autorizadas"
+
+ipv6 unicast-routing
+
+interface g0/0
+ ipv6 address FE80::1 link-local
+ ipv6 address 2001:DB8:1::1/64
+ no shutdown
+→ Activa la interfaz LAN con dirección global y local.
+
+interface s0/0/0
+ ipv6 address FE80::1 link-local
+ ipv6 address 2001:DB8:12::1/64
+ clock rate 64000
+ no shutdown
+→ Configura el enlace serial hacia R2.
+
+ipv6 route 2001:DB8:2::/64 2001:DB8:12::2
+ipv6 route 2001:DB8:3::/64 2001:DB8:12::2
+→ Define rutas estáticas hacia las LAN de R2 y R3.
+
+line console 0
+ password cisco
+ login
+line vty 0 4
+ password cisco
+ login
+ transport input ssh
+end
+copy run start
+
+R2
+enable
+configure terminal
+hostname R2
+no ip domain-lookup
+service password-encryption
+enable secret cisco
+banner motd "Prohibido el acceso a personas no autorizadas"
+
+ipv6 unicast-routing
+
+interface g0/0
+ ipv6 address FE80::2 link-local
+ ipv6 address 2001:DB8:2::1/64
+ no shutdown
+→ Activa la interfaz LAN con dirección global y local.
+
+interface s0/0/0
+ ipv6 address FE80::2 link-local
+ ipv6 address 2001:DB8:12::2/64
+ no shutdown
+→ Conecta hacia R1.
+
+interface s0/0/1
+ ipv6 address FE80::2 link-local
+ ipv6 address 2001:DB8:23::1/64
+ clock rate 64000
+ no shutdown
+→ Conecta hacia R3.
+
+ipv6 route 2001:DB8:1::/64 2001:DB8:12::1
+ipv6 route 2001:DB8:3::/64 2001:DB8:23::2
+→ Define rutas hacia las LAN de R1 y R3.
+
+line console 0
+ password cisco
+ login
+line vty 0 4
+ password cisco
+ login
+ transport input ssh
+end
+copy run start
+
+R3
+enable
+configure terminal
+hostname R3
+no ip domain-lookup
+service password-encryption
+enable secret cisco
+banner motd "Prohibido el acceso a personas no autorizadas"
+
+ipv6 unicast-routing
+
+interface g0/0
+ ipv6 address FE80::3 link-local
+ ipv6 address 2001:DB8:3::1/64
+ no shutdown
+→ Activa la interfaz LAN.
+
+interface s0/0/1
+ ipv6 address FE80::3 link-local
+ ipv6 address 2001:DB8:23::2/64
+ no shutdown
+→ Conecta hacia R2.
+
+ipv6 route 2001:DB8:1::/64 2001:DB8:23::1
+ipv6 route 2001:DB8:2::/64 2001:DB8:23::1
+→ Define rutas hacia las LAN de R1 y R2.
+
+line console 0
+ password cisco
+ login
+line vty 0 4
+ password cisco
+ login
+ transport input ssh
+end
+copy run start
+
+PRUEBAS DE CONECTIVIDAD
+
+Desde PC1 hacer ping a PC2 y PC3:
+
+ping 2001:DB8:2::10
+ping 2001:DB8:3::10
+
+
+Desde R1 verificar tabla de rutas:
+
+show ipv6 route
+
+
+Desde cualquier router verificar conectividad entre interfaces seriales:
+
+ping 2001:DB8:12::2
+ping 2001:DB8:23::1

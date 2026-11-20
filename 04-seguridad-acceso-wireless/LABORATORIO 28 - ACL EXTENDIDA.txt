@@ -1,0 +1,62 @@
+LAB 28 – ACL EXTENDIDAS NAMED (ARQUITECTURA DISTRIBUIDA)
+
+Autor: Luis Cuya
+
+Estado: 100 % CERRADO Y VERIFICADO
+====================================================================
+
+OBJETIVO CORPORATIVO
+Control granular de salida a Internet y al ERP por departamento:
+- FINANZAS y ADMINISTRACIÓN → acceso total
+- COMERCIAL → ERP solo (HTTPS 443 y 80) + LAN interna sí + Internet sí
+- ALMACÉN → ERP solo (HTTPS 443 y 80) + LAN interna no + Internet no
+
+ARQUITECTURA ELEGIDA (la más didáctica y auditada)
+- ACL named individual por cada departamento
+- Aplicada en dirección IN en la subinterfaz correspondiente
+- Router-on-a-Stick con trunk 802.1Q seguro (native vlan 999)
+
+TOPOLOGÍA
+- R-CORPORACION-MAD (ISR4331) – Router-on-a-Stick
+- SW1 (2960-24TT) – Switch L2 con PortFast + BPDU Guard
+- VLAN 10  → FINANZAS      (192.168.10.0/24)
+- VLAN 20  → ADMIN         (192.168.20.0/24)
+- VLAN 30  → COMERCIAL     (192.168.30.0/24)
+- VLAN 40  → ALMACÉN       (192.168.40.0/24)
+- VLAN 88  → INTERNET-SIMULADO (172.16.88.0/24 – Server-PT cisco.pt)
+- VLAN 99  → SERVIDOR-ERP  (192.168.99.0/24)
+
+ACLs NAMED INDIVIDUALES (aplicadas en IN)
+
+ip access-list extended FINANZAS
+ permit ip 192.168.10.0 0.0.0.255 any
+ deny   ip any any
+
+ip access-list extended ADMIN
+ permit ip 192.168.20.0 0.0.0.255 any
+ deny   ip any any
+
+ip access-list extended COMERCIAL
+ permit tcp 192.168.30.0 0.0.0.255 host 192.168.99.10 eq www
+ permit tcp 192.168.30.0 0.0.0.255 host 192.168.99.10 eq 443
+ deny ip 192.168.30.0 0.0.0.255 host 192.168.99.10
+ permit ip 192.168.30.0 0.0.0.255 any
+ deny ip any any
+
+ip access-list extended ALMACEN
+ permit tcp 192.168.40.0 0.0.0.255 host 192.168.99.10 eq www
+ permit tcp 192.168.40.0 0.0.0.255 host 192.168.99.10 eq 443
+ deny ip 192.168.40.0 0.0.0.255 host 192.168.99.10
+ deny ip 192.168.40.0 0.0.0.255 172.16.88.0 0.0.0.255
+ deny ip any any
+
+APLICACIÓN
+interface GigabitEthernet0/0/0.10 → ip access-group FINANZAS in
+interface GigabitEthernet0/0/0.20 → ip access-group ADMIN in
+interface GigabitEthernet0/0/0.30 → ip access-group COMERCIAL in
+interface GigabitEthernet0/0/0.40 → ip access-group ALMACEN in
+
+SEGURIDAD ADICIONAL
+- Trunk con native vlan 999 (blackhole)
+- PortFast + BPDU Guard en todos los puertos access
+- Banner legal MOTD

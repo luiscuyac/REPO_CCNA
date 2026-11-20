@@ -1,0 +1,95 @@
+LABORATORIO: OSPFv3 MULTIÁREA (IPv6)
+
+OBJETIVO DEL LABORATORIO
+Configurar un entorno de enrutamiento IPv6 utilizando OSPFv3 multiárea con los routers GERENCIA, FINANZAS y RRHH. Se implementan dos áreas (0 y 1), se habilita OSPFv3 por interfaz y se verifica la convergencia.
+
+TOPOLOGIA LOGICA
+GERENCIA conecta con FINANZAS por el serial S0/0/0 (Área 0)
+GERENCIA conecta con RRHH por el serial S0/0/1 (Área 1)
+
+TABLA DE DIRECCIONAMIENTO
+GERENCIA G0/0 2001:DB8:1::1/64 Área 0
+GERENCIA S0/0/0 2001:DB8:12::1/64 Área 0
+GERENCIA S0/0/1 2001:DB8:13::1/64 Área 1
+FINANZAS G0/0 2001:DB8:2::1/64 Área 0
+FINANZAS S0/0/0 2001:DB8:12::2/64 Área 0
+RRHH 	G0/0 2001:DB8:3::1/64 Área 1
+RRHH 	S0/0/1 2001:DB8:13::2/64 Área 1
+
+CONFIGURACION DE GERENCIA
+
+hostname GERENCIA
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+
+interface GigabitEthernet0/0
+ipv6 address FE80::1 link-local
+ipv6 address 2001:DB8:1::1/64
+ipv6 ospf 1 area 0
+
+interface Serial0/0/0
+ipv6 address FE80::1 link-local
+ipv6 address 2001:DB8:12::1/64
+ipv6 ospf 1 area 0
+clock rate 2000000
+
+interface Serial0/0/1
+ipv6 address FE80::1 link-local
+ipv6 address 2001:DB8:13::1/64
+ipv6 ospf 1 area 1
+clock rate 2000000
+
+ipv6 router ospf 1
+router-id 1.1.1.1
+log-adjacency-changes
+
+CONFIGURACION DE FINANZAS
+
+hostname FINANZAS
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+
+interface GigabitEthernet0/0
+ipv6 address FE80::2 link-local
+ipv6 address 2001:DB8:2::1/64
+ipv6 ospf 1 area 0
+
+interface Serial0/0/0
+ipv6 address FE80::2 link-local
+ipv6 address 2001:DB8:12::2/64
+ipv6 ospf 1 area 0
+
+ipv6 router ospf 1
+router-id 2.2.2.2
+log-adjacency-changes
+
+CONFIGURACION DE RRHH
+
+hostname RRHH
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+
+interface GigabitEthernet0/0
+ipv6 address FE80::3 link-local
+ipv6 address 2001:DB8:3::1/64
+ipv6 ospf 1 area 1
+
+interface Serial0/0/1
+ipv6 address FE80::3 link-local
+ipv6 address 2001:DB8:13::2/64
+ipv6 ospf 1 area 1
+
+ipv6 router ospf 1
+router-id 3.3.3.3
+log-adjacency-changes
+
+COMANDOS DE VERIFICACION
+show ipv6 ospf neighbor
+show ipv6 ospf
+show ipv6 route ospf
+
+CONCLUSIONES
+El enrutamiento multiárea permite dividir la red para optimizar carga, mejorar rendimiento y escalabilidad. El backbone (Área 0) debe existir y GERENCIA cumple este rol conectando todas las áreas. Las adyacencias se forman correctamente usando direcciones link-local.

@@ -1,0 +1,45 @@
+LABORATORIO - CONFIGURACIÓN SEGURA DE ACCESO (PRODUCCIÓN 2025)
+Autor: Luis Cuya
+Estado: 100 % CERRADO Y DEMOSTRADO
+
+TOPOLOGÍA
+
+R-MASTER (ISR4331) ── LAN 192.168.1.0/24 ── PC1 (SSH) + Portátil (consola)
+
+COMANDOS CLAVE - CONFIGURACION SEGURA DE ACCESO (PRODUCCION 2025)
+
+service password-encryption ==> Encripta todas las passwords (tipo 7)
+
+enable secret ... ==> Password enable en MD5 (tipo 5, segura)
+
+username admin privilege 15 secret ... ==> Usuario admin con privilegio máximo y password MD5
+username soporte secret ... ==> Usuario soporte con privilegio bajo y password MD5
+
+ip ssh version 2 ==> Fuerza SSH versión 2 (más segura)
+
+ip ssh time-out 60 ==> Timeout de negociación SSH (60 segundos)
+
+ip domain-name cuya.es ==> Dominio necesario para generar clave RSA (obligatorio para SSH)
+
+banner motd ^C ... ^C ==> Banner legal antes del login (cumple RGPD y Código Penal)
+
+line con 0 / line vty 0 15
+ exec-timeout 5 0 ==> Cierra sesión tras 5 min inactividad
+ logging synchronous ==> Logs no interrumpen la escritura
+ login local ==> Usa usuarios locales (admin/soporte)
+ history size 256 ==> Historial de 256 comandos (troubleshooting fácil)
+ transport input ssh ==> Solo SSH (Telnet bloqueado)
+
+FUNCIONALIDADES IMPLANTADAS
+- Solo acceso SSH (Telnet rechazado)
+- Autenticación local con usuarios (admin priv 15 + soporte)
+- Contraseñas encriptadas tipo 5
+- Banner legal español con marco (cumple RGPD y Código Penal)
+- Timeout de sesiones 5 minutos
+- Clave RSA + dominio
+- Logging synchronous + historial 256 comandos
+
+PRUEBAS REALIZADAS
+- Conexión consola → banner + login local
+- SSH desde PC1 → banner + usuario/contraseña
+- Telnet desde PC1 → "Connection closed by foreign host"

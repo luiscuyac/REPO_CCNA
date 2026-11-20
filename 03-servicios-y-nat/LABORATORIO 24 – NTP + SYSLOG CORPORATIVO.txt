@@ -1,0 +1,37 @@
+LABORATORIO NTP + SYSLOG CORPORATIVO
+
+Topología
+
+R1-MASTER (Loopback 1.1.1.1) --- 10.0.0.0/30 --- R2-SLAVE (Loopback 2.2.2.2) --- 10.0.0.4/30 --- R3-CLIENT-PRO (Loopback 3.3.3.3)
+
+--- 10.0.0.8/30 --- SERVER-PT-SERVER SYSLOG (10.0.0.10)
+
+Objetivo
+
+NTP corporativo interno autenticado MD5 con identificador permanente
+Syslog centralizado + buffer local
+Trazabilidad con hora y hora milisegundos (máximo posible en PT)
+
+Configuración común en los tres routers (adaptada a Packet Tracer - capado)
+service timestamps log datetime msec
+service timestamps debug datetime msec
+logging buffered 16384
+logging host 10.0.0.10
+logging trap debugging
+Rutas estáticas adicionales necesarias
+R1-MASTER: ip route 10.0.0.8 255.255.255.252 10.0.0.2
+R3-CLIENT-PRO: ip route 10.0.0.8 255.255.255.252 10.0.0.5
+
+Limitaciones conocidas de Packet Tracer (imagen 2911 capada)
+
+No permite logging source-interface Loopback0
+No permite localtime show-timezone
+No permite logging trap informational (solo debugging)
+No permite service sequence-numbers
+
+Resultado conseguido
+
+NTP autenticado funcionando (Stratum 2 master / Stratum 3 clientes)
+Hora sincronizada con milisegundos
+Logs llegando en tiempo real al servidor syslog desde los 3 routers
+Buffer local activo

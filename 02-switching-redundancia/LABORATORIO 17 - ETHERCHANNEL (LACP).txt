@@ -1,0 +1,79 @@
+LABORATORIO: ETHERCHANNEL (LACP)
+
+OBJETIVO:
+Crear un EtherChannel usando el protocolo LACP entre dos switches Cisco, agrupando dos enlaces físicos en un solo enlace lógico (Port-Channel 1). El laboratorio se centra en la configuración, verificación y comprensión del funcionamiento lógico del EtherChannel.
+
+EQUIPOS UTILIZADOS:
+
+SW1: Cisco 2960-24TT
+
+SW2: Cisco 2960-24TT
+
+PUERTOS UTILIZADOS:
+
+SW1: FastEthernet0/1 y FastEthernet0/2
+
+SW2: FastEthernet0/1 y FastEthernet0/2
+
+TOPOLOGIA FISICA:
+Dos switches conectados entre sí mediante dos cables físicos:
+SW1 F0/1 <-----> F0/1 SW2
+SW1 F0/2 <-----> F0/2 SW2
+
+TOPOLOGIA LOGICA:
+Los puertos F0/1 y F0/2 de cada switch se agrupan y forman un solo enlace lógico:
+Port-Channel 1 (Po1)
+
+Este enlace lógico se configura como trunk para permitir múltiples VLANs si se requiere en el futuro.
+
+CONFIGURACION SW1
+
+interface range fastEthernet0/1 - 2
+switchport mode trunk
+channel-group 1 mode active
+exit
+
+interface port-channel 1
+switchport mode trunk
+exit
+
+CONFIGURACION SW2
+
+interface range fastEthernet0/1 - 2
+switchport mode trunk
+channel-group 1 mode active
+exit
+
+interface port-channel 1
+switchport mode trunk
+exit
+
+VERIFICACIONES
+
+Mostrar el estado del EtherChannel:
+show etherchannel summary
+
+Ver el estado del trunk:
+show interfaces trunk
+
+Ver el estado del Port-Channel:
+show interfaces port-channel 1
+
+Ver STP sobre el Port-Channel:
+show spanning-tree interface port-channel 1
+
+RESULTADO ESPERADO
+
+En ambos switches se debe mostrar el Port-Channel 1 en estado "SU" (Layer 2 + Up).
+
+Los puertos F0/1 y F0/2 deben aparecer en estado "P" (port-channel).
+
+El enlace lógico Po1 debe aparecer como trunk.
+
+STP solo verá un enlace lógico, no dos enlaces físicos.
+
+El tráfico real será distribuido entre los dos enlaces físicos según el algoritmo del switch.
+
+EXPLICACION RESUMIDA
+
+LACP permite que dos switches formen un canal lógico agrupando varios puertos físicos. Esto aumenta el ancho de banda disponible y evita bucles, ya que STP ve solo un enlace. Además, LACP agrega estabilidad porque negocia automáticamente y evita configuraciones incompatibles.

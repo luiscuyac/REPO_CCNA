@@ -1,0 +1,38 @@
+====================================================================
+LAB 31 - WIRELESS BASICO - AP AUTONOMO
+
+Autor: Luis Cuya
+
+Estado: 100 % CERRADO Y VERIFICADO
+====================================================================
+
+TOPOLOGIA
+
+SW1-WIRELESS (2960)
+- Fa0/1 → AP-AUTONOMO (VLAN 10)
+AP-AUTONOMO
+- Wi-Fi → PC-FINANZAS y PC-COMERCIAL
+
+CONFIGURACION CLAVE
+
+Switch:
+interface FastEthernet0/1
+ description PUERTO AL AP AUTONOMO
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+
+AP-PT (GUI):
+
+SSID: CORPORACION-WIFI
+Authentication: WPA2-PSK
+Pass Phrase: Cisco2025!
+Encryption: AES
+Channel: 6
+
+PRUEBAS VERIFICADAS
+
+- 2 laptops conectadas por Wi-Fi
+- IP por DHCP (192.168.10.x)
+- Ping entre clientes Wi-Fi → OK
+- Ping desde Wi-Fi a cableado → OK

@@ -1,0 +1,158 @@
+LABORATORIO: INTER-VLAN ROUTING (ROUTER ON A STICK)
+
+1. Objetivo del laboratorio
+
+Este laboratorio implementa comunicación entre VLANs mediante un router utilizando Router on a Stick.
+Las VLANs permanecen aisladas en capa 2 dentro del switch, pero el router permite comunicación entre ellas usando subinterfaces.
+
+Este método es común en pymes donde existe un solo switch administrable y un router con una sola interfaz hacia la LAN.
+
+2. Topología usada
+
+Topología física:
+
+Router G0/0 conectado al switch SW1 en el puerto Fa0/24.
+
+PCs conectadas a puertos de acceso en sus VLANs correspondientes.
+
+Topología lógica de VLANs:
+
+VLAN 10 – VENTAS
+
+VLAN 20 – FINANZAS
+
+VLAN 30 – RRHH
+
+VLAN 99 – NATIVA (para tráfico no etiquetado)
+
+3. Direccionamiento IP
+
+Gateways en el router:
+
+VLAN 10 – 192.168.10.1/24
+VLAN 20 – 192.168.20.1/24
+VLAN 30 – 192.168.30.1/24
+VLAN 99 – 192.168.99.1/24 (opcional, solo nativa)
+
+4. Configuración del switch SW1
+
+Configuración esencial para VLANs y el puerto troncal hacia el router.
+
+hostname SW1
+
+vlan 10
+ name VENTAS
+vlan 20
+ name FINANZAS
+vlan 30
+ name RRHH
+vlan 99
+ name NATIVA
+
+interface fastethernet0/1
+ switchport access vlan 10
+ switchport mode access
+
+interface fastethernet0/2
+ switchport access vlan 20
+ switchport mode access
+
+interface fastethernet0/3
+ switchport access vlan 30
+ switchport mode access
+
+interface fastethernet0/24
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 10,20,30,99
+ switchport mode trunk
+
+5. Configuración del Router (Router on a Stick)
+
+Habilitar la interfaz física:
+
+interface g0/0
+ no shutdown
+
+
+Subinterfaces:
+
+VLAN 10
+interface g0/0.10
+ encapsulation dot1Q 10
+ ip address 192.168.10.1 255.255.255.0
+
+VLAN 20
+interface g0/0.20
+ encapsulation dot1Q 20
+ ip address 192.168.20.1 255.255.255.0
+
+VLAN 30
+interface g0/0.30
+ encapsulation dot1Q 30
+ ip address 192.168.30.1 255.255.255.0
+
+VLAN 99 (nativa)
+interface g0/0.99
+ encapsulation dot1Q 99 native
+ ip address 192.168.99.1 255.255.255.0
+
+6. Configuración de los PCs
+
+Ejemplo PC VLAN 10:
+
+IP: 192.168.10.10
+Mask: 255.255.255.0
+Gateway: 192.168.10.1
+
+
+Ejemplo PC VLAN 20:
+
+IP: 192.168.20.20
+Mask: 255.255.255.0
+Gateway: 192.168.20.1
+
+
+Ejemplo PC VLAN 30:
+
+IP: 192.168.30.30
+Mask: 255.255.255.0
+Gateway: 192.168.30.1
+
+7. Pruebas finales
+
+Ver subinterfaces en el router:
+
+show ip interface brief
+
+
+Probar puerta de enlace:
+
+ping 192.168.10.1
+ping 192.168.20.1
+ping 192.168.30.1
+
+
+Probar comunicación entre VLANs:
+
+ping 192.168.20.20
+ping 192.168.30.30
+
+
+Ver VLANs en el switch:
+
+show vlan brief
+
+
+Ver trunk:
+
+show interface fa0/24 switchport
+
+8. Resultado esperado
+
+Las VLANs están segmentadas correctamente en capa 2.
+
+La interfaz G0/0 del router enruta tráfico entre VLANs mediante subinterfaces.
+
+Los PCs pueden comunicarse entre VLANs solo gracias al router.
+
+Diseño real aplicado en pymes con un único switch administrable.

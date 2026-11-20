@@ -1,0 +1,52 @@
+LABORATORIO: VLANs y Asignación de Puertos
+
+Objetivo:
+Configurar un switch Cisco para crear VLANs y asignar puertos físicos específicos a cada VLAN, con el fin de segmentar la red y evitar comunicación entre dispositivos que comparten el mismo switch pero pertenecen a grupos distintos.
+
+Conceptos:
+Una VLAN crea un dominio de broadcast independiente dentro del switch. Esto permite separar departamentos o grupos de trabajo sin añadir más dispositivos físicos. Los equipos conectados a puertos asignados a VLANs diferentes no pueden comunicarse entre sí sin un router o un switch capa 3.
+
+Topología utilizada:
+PC1 conectado al puerto FastEthernet0/1 (VLAN 10)
+PC2 conectado al puerto FastEthernet0/2 (VLAN 20)
+PC3 conectado al puerto FastEthernet0/3 (VLAN 30)
+Switch modelo Cisco 2960-24TT
+
+Direcciones IP asignadas:
+PC1: 192.168.1.10
+PC2: 192.168.1.20
+PC3: 192.168.1.30
+
+Configuración del switch SW1:
+Se configuraron tres puertos en modo access, cada uno asignado a una VLAN:
+- Fa0/1 asignado a VLAN 10
+- Fa0/2 asignado a VLAN 20
+- Fa0/3 asignado a VLAN 30
+
+Las VLANs fueron creadas automáticamente por el switch al asignarlas a los puertos.
+
+Comandos utilizados:
+vlan X
+Crea la VLAN X si no existe.
+
+interface fa0/x
+Entra a la configuración del puerto físico.
+
+switchport mode access
+Configura el puerto como puerto de acceso.
+
+switchport access vlan X
+Asigna al puerto la VLAN X.
+
+Verificación:
+show vlan brief
+Muestra las VLANs creadas y los puertos asociados.
+
+show interfaces status
+Permite verificar que cada puerto está activo y conectado.
+
+Prueba:
+Los PCs intentaron comunicarse mediante ping y no hubo respuesta. Esto confirma que cada puerto pertenece a una VLAN distinta, lo que impide el intercambio de tramas aunque los equipos compartan el mismo rango de red.
+
+Conclusión:
+La segmentación mediante VLANs funcionó correctamente. El tráfico de cada PC quedó aislado en su respectiva VLAN. Para permitir comunicación en laboratorios posteriores será necesario configurar enlaces troncales y enrutamiento entre VLANs.

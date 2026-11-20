@@ -1,0 +1,82 @@
+LABORATORIO – ACL ESTÁNDAR CORPORATIVA
+
+Estado: CERRADO DEFINITIVO
+
+Autor: Luis Cuya
+====================================================================
+          LABORATORIO 27 – ACL ESTÁNDAR CORPORATIVA
+          Topología Router-on-a-Stick + Switch L2
+          100 % funcional y profesional – Diciembre 2025
+====================================================================
+
+OBJETIVO
+Proteger el segmento de SERVIDORES CRÍTICOS (VLAN 99) para que solo
+puedan acceder los departamentos de FINANZAS y ADMINISTRACIÓN-RRHH.
+COMERCIAL y ALMACÉN deben quedar bloqueados.
+
+REQUISITOS CUMPLIDOS
+- Finanzas (VLAN 10) → acceso total al servidor 192.168.99.10
+- Administración-RRHH (VLAN 20) → acceso total al servidor
+- Comercial-Marketing (VLAN 30) → bloqueado al servidor
+- Almacén-Operarios (VLAN 40) → bloqueado al servidor
+- Todos los PCs pueden hacer ping a su gateway correspondiente
+- Portfast + BPDU Guard en todos los puertos access
+- Trunk seguro con native VLAN 999 y allowed vlan restringido
+- ACL estándar aplicada correctamente en OUT sobre la subinterfaz .99
+- Etiquetas completas con IP/Máscara/Gateway/VLAN en todos los dispositivos
+
+TOPOLOGÍA FÍSICA
+PC-FINANZAS   (VLAN 10) ───┐
+PC-ADMIN      (VLAN 20) ───┤
+PC-COMERCIAL  (VLAN 30) ───┤── Fa0/1 a Fa0/4 → SW1 (2960)
+PC-ALMACEN    (VLAN 40) ───┤
+SERVIDOR-ERP  (VLAN 99) ───┘
+                               │
+                               └─ Fa0/10 (trunk) y Fa0/24 (access VLAN99) → SW1
+                                                      │
+                                                      └─ G0/0/0 → R-CORPORACION-MAD (4331)
+
+CONFIGURACIÓN FINAL DEL ROUTER (R-CORPORACION-MAD)
+interface GigabitEthernet0/0/0.99
+ description SERVIDORES-CRITICOS
+ encapsulation dot1Q 99
+ ip address 192.168.99.1 255.255.255.0
+ ip access-group 10 out          ← CLAVE: OUT en la subinterfaz del servidor
+
+access-list 10 remark PERMITIR ACCESO A SERVIDORES
+access-list 10 permit 192.168.10.0 0.0.0.255
+access-list 10 permit 192.168.20.0 0.0.0.255
+access-list 10 deny   192.168.30.0 0.0.0.255
+access-list 10 deny   192.168.40.0 0.0.0.255
+access-list 10 permit any
+
+CONFIGURACIÓN RELEVANTE DEL SWITCH (SW1)
+interface range FastEthernet0/1 - 4
+ switchport mode access
+ switchport access vlan <10/20/30/40>
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+
+interface FastEthernet0/24
+ description SERVIDORES-CRITICOS
+ switchport access vlan 99
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+
+interface FastEthernet0/10
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 10,20,30,40,99
+ switchport mode trunk
+
+RESULTADOS DE VERIFICACIÓN
+PC-FINANZAS    → ping 192.168.99.10 → OK
+PC-ADMIN       → ping 192.168.99.10 → OK
+PC-COMERCIAL   → ping 192.168.99.10 → Destination host unreachable
+PC-ALMACEN     → ping 192.168.99.10 → Destination host unreachable
+
+NOTA IMPORTANTE:
+
+Las ACL estándar aplicadas en OUT nunca bloquean el tráfico destinado
+al propio router (192.168.99.1 sigue respondiendo ICMP desde redes denegadas).
+Comportamiento 100 % normal y esperado.

@@ -1,0 +1,73 @@
+# LABORATORIO – EtherChannel desigual (2+3) + HSRP IPv4 con bundle único estático (mode on)
+
+## Objetivo
+Conseguir redundancia total capa 2 + capa 3 usando:
+- Un solo bundle de 5 cables (2 hacia R1 + 3 hacia R2)
+- Dos routers 2911 con HSRP IPv4
+- Cero corte si cae cualquier cable o cualquier router
+- Funcional incluso en el caprichoso ISR 2911 de Packet Tracer
+
+## Topología
+PC1 ---- SW1 ---- R1 (2 cables)
+|---- R2 (3 cables)
+text- SW1: 2960
+- R1 y R2: 2911
+- Todos los 5 cables forman un único Port-channel 1 (bundle estático)
+
+## Configuración final que FUNCIONA al 100 % en PT 2911
+
+### SW1 (2960)
+```cisco
+
+interface Port-channel 1
+ description BUNDLE TO ROUTERS
+ switchport mode access
+ switchport access vlan 10
+ spanning-tree portfast
+ no cdp enable
+!
+interface range FastEthernet0/1 - 5
+ description TO R1-R2
+ switchport mode access
+ switchport access vlan 10
+ channel-group 1 mode on
+ no cdp enable
+
+R1 (HSRP Active – priority 110)
+
+ciscointerface Port-channel 1
+ description LAN principal - HSRP Active
+ ip address 192.168.10.1 255.255.255.0
+ standby 10 ip 192.168.10.254
+ standby 10 priority 110
+ standby 10 preempt
+ no cdp enable
+ no shutdown
+!
+interface range GigabitEthernet0/0 - 1
+ channel-group 1 mode on
+ no shutdown
+
+R2 (HSRP Standby – priority 100)
+
+ciscointerface Port-channel 1
+ description LAN principal - HSRP Standby
+ ip address 192.168.10.2 255.255.255.0
+ standby 10 ip 192.168.10.254
+ standby 10 priority 100
+ standby 10 preempt
+ no cdp enable
+ no shutdown
+!
+interface range GigabitEthernet0/0 - 2
+ channel-group 1 mode on
+ no shutdown
+Trucos y bugs del 2911 en Packet Tracer (OBLIGATORIO saberlos)
+
+El 2911 NO acepta channel-group X mode active → solo mode on o nada
+Tras reload el Port-channel 1 puede quedar down/down aunque los miembros estén up
+Solución: recrear en este orden exacto:textno interface Port-channel 1
+interface Port-channel 1 → IP + HSRP + no shutdown
+channel-group X mode on en los puertos físicos
+El switch debe estar también en mode on (no LACP)
+El Port-channel del switch debe estar en switchport access vlan 10 (si no, la PC no llega)

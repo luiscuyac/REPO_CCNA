@@ -1,0 +1,98 @@
+Laboratorio: Rutas Estáticas
+
+Autor: Luis Eduardo Cuya Carranza
+Fecha: 28/10/2025
+Curso: CCNA - Configuración de Rutas Estáticas
+Software: Cisco Packet Tracer 8.2.2.0400
+
+1. Objetivo del Laboratorio
+
+Configurar y verificar la conectividad entre tres redes LAN mediante rutas estáticas encadenadas, utilizando tres routers Cisco interconectados por enlaces Ethernet y Serial.
+El objetivo es lograr comunicación completa entre las tres LAN sin usar protocolos de enrutamiento dinámico.
+
+2. Topología de Red (Lógica)
+ [PC1]---(192.168.1.0/24)---[R1]---10.0.0.0/30---[R2]---172.16.0.0/30---[R3]---(192.168.3.0/24)---[PC3]
+                                |
+                                +---(192.168.2.0/24)---[PC2]
+
+3. Asignación de Direcciones IP
+Dispositivo	Interfaz	Dirección IP	Máscara		Descripción
+
+R1		Fa0/0		10.0.0.1	255.255.255.252	Enlace con R2
+		Fa0/1		192.168.1.1	255.255.255.0	LAN 1
+
+R2		Fa0/0		10.0.0.2	255.255.255.252	Enlace con R1
+		Fa0/1		192.168.2.1	255.255.255.0	LAN 2
+		S0/0/0		172.16.0.1	255.255.255.252	Enlace serial con R3 (DCE)
+
+R3		S0/0/0		172.16.0.2	255.255.255.252	Enlace serial con R2 (DTE)
+		Fa0/1		192.168.3.1	255.255.255.0	LAN 3
+
+PC1		NIC		192.168.1.10	255.255.255.0	GW: 192.168.1.1
+PC2		NIC		192.168.2.10	255.255.255.0	GW: 192.168.2.1
+PC3		NIC		192.168.3.10	255.255.255.0	GW: 192.168.3.1
+
+4. Configuración de Rutas Estáticas
+
+R1
+
+ip route 192.168.2.0 255.255.255.0 10.0.0.2
+ip route 192.168.3.0 255.255.255.0 10.0.0.2
+ip route 172.16.0.0 255.255.255.252 10.0.0.2
+
+R2
+
+ip route 192.168.1.0 255.255.255.0 10.0.0.1
+ip route 192.168.3.0 255.255.255.0 172.16.0.2
+
+
+R3
+
+ip route 192.168.1.0 255.255.255.0 172.16.0.1
+ip route 192.168.2.0 255.255.255.0 172.16.0.1
+ip route 10.0.0.0 255.255.255.252 172.16.0.1 
+
+5. Configuración del Enlace Serial
+
+R2 (DCE)
+
+interface Serial0/0/0
+ ip address 172.16.0.1 255.255.255.252
+ clock rate 64000
+ no shutdown
+ description Enlace Serial hacia R3
+
+
+R3 (DTE)
+
+interface Serial0/0/0
+ ip address 172.16.0.2 255.255.255.252
+ no shutdown
+ description Enlace Serial hacia R2
+
+6. Pruebas de Conectividad
+
+- Ping desde PC1 a PC2 → Éxito
+
+- Ping desde PC1 a PC3 → Éxito
+
+- Ping desde PC3 a PC2 → Éxito
+
+- Routers verifican conectividad mediante ping y show ip route
+
+7. Comandos de Verificación
+
+show ip interface brief
+show ip route
+ping [ip destino]
+Desde el router: traceroute [ip destino]
+Desde los PCs: tracert [ip destino]
+
+8. Conclusión
+
+Se logró la comunicación completa entre las tres LAN utilizando rutas estáticas encadenadas.
+El laboratorio demuestra el funcionamiento de la tabla de enrutamiento estática en redes pequeñas.
+
+Equipos utilizados:
+- Routers Cisco 1841 con IOS 12.4
+- PCs genéricos de Packet Tracer

@@ -1,0 +1,71 @@
+LABORATORIO: DHCP RELAY AGENT
+
+Descripción
+Este laboratorio muestra cómo usar un router para reenviar solicitudes DHCP (ip helper-address) hacia un servidor DHCP que está en otra red.
+
+Topología en texto
+R_DHCP (192.168.100.10) ---- R1 (192.168.100.1 / 192.168.10.1) ---- SW1 ---- PC1, PC2, PC3
+
+Red de los PCs: 192.168.10.0/24
+Red del servidor: 192.168.100.0/24
+
+R1 actúa como relay DHCP.
+R_DHCP entrega direcciones a los PCs.
+
+Configuración esencial
+
+R1:
+
+G0/0: 192.168.10.1
+
+G0/1: 192.168.100.1
+
+ip helper-address 192.168.100.10
+
+R_DHCP:
+
+Servidor DHCP con pool: 192.168.10.0/24
+
+Default router del pool: 192.168.10.1
+
+Ruta estática hacia LAN: ip route 192.168.10.0 255.255.255.0 192.168.100.1
+
+SW1:
+
+Todos los puertos en VLAN 1 por defecto
+
+Portfast habilitado en puertos hacia PCs
+
+Flujo del proceso DHCP
+
+PC envía DHCP Discover (broadcast)
+
+R1 recibe el broadcast
+
+R1 lo reenvía como unicast al servidor DHCP
+
+R_DHCP responde con Offer
+
+R1 lo devuelve a la LAN
+
+PC obtiene su IP correctamente
+
+Comandos clave
+
+R1:
+ip helper-address 192.168.100.10
+
+R_DHCP:
+ip dhcp excluded-address 192.168.10.1 192.168.10.10
+ip dhcp pool LAN10
+network 192.168.10.0 255.255.255.0
+default-router 192.168.10.1
+ip route 192.168.10.0 255.255.255.0 192.168.100.1
+
+Notas finales
+
+No es necesario configurar VLANs para este laboratorio.
+
+Portfast evita demoras de STP al conectar PCs.
+
+El helper-address y la ruta estática son los elementos clave.

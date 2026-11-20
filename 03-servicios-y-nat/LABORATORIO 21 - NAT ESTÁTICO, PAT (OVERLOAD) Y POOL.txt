@@ -1,0 +1,88 @@
+LABORATORIO: NAT ESTÁTICO, PAT (OVERLOAD) Y POOL
+
+Modelo de router: Cisco 1941 (IOS 15.1)
+Topología:
+
+ISP → R1 (Gi0/1 – 200.200.200.2/30)
+R1 (Gi0/0 – 192.168.10.1/24) → Switch → SERVIDOR + PC1 + PC2
+
+Objetivo:
+Dominar los tres tipos de NAT más usados y rentables:
+
+NAT estático (servidor siempre visible)
+PAT overload con interfaz (95 % de pymes)
+NAT con pool overload (clientes con varias IPs públicas)
+
+Direcciones:
+
+SERVIDOR → 192.168.10.10 / Gateway 192.168.10.1
+PC1 → 192.168.10.20 / Gateway 192.168.10.1
+PC2 → 192.168.10.30 / Gateway 192.168.10.1
+WAN R1 → 200.200.200.2/30
+ISP → 200.200.200.1/30
+
+Configuración del router R1 (la que dejas guardada y facturas)
+ciscoenable
+configure terminal
+hostname R1
+no ip domain-lookup
+service password-encryption
+banner motd ^CAcceso restringido^C
+
+interface GigabitEthernet0/0
+ description LAN INTERNA
+ ip address 192.168.10.1 255.255.255.0
+ ip nat inside
+ no shutdown
+
+interface GigabitEthernet0/1
+ description INTERNET
+ ip address 200.200.200.2 255.255.255.252
+ ip nat outside
+ no shutdown
+
+ip route 0.0.0.0 0.0.0.0 200.200.200.1
+
+access-list 1 permit 192.168.10.0 0.0.0.255
+
+! === NAT ESTATICO (servidor siempre visible) ===
+ip nat inside source static 192.168.10.10 200.200.200.10
+
+! === POOL OVERLOAD (cliente con 6 IPs publicas) - ACTIVO ===
+ip nat pool PUBLIC 200.200.200.20 200.200.200.25 netmask 255.255.255.0
+ip nat inside source list 1 pool PUBLIC overload
+
+! === PAT POR INTERFAZ (el clasico de pymes) - COMENTADO, listo en 10 segundos ===
+! no ip nat inside source list 1 pool PUBLIC overload
+! ip nat inside source list 1 interface GigabitEthernet0/1 overload
+
+line con 0
+ password 7 0822455D0A16
+ login
+line vty 0 4
+ password 7 0822455D0A16
+ login
+ transport input ssh
+
+end
+copy running-config startup-config
+
+Configuración del router ISP (solo para que PT muestre traducciones)
+cisco
+
+interface GigabitEthernet0/0
+ ip address 200.200.200.1 255.255.255.252
+ no shutdown
+ip route 0.0.0.0 0.0.0.0 GigabitEthernet0/0   ! simula Internet
+Pruebas de conectividad y verificación
+ciscoR1# show ip nat translations
+Pro Inside global      Inside local       Outside local      Outside global
+--- 200.200.200.10      192.168.10.10      ---                ---        ← estático
+icmp 200.200.200.20:xxx 192.168.10.20:xxx 8.8.8.8:xxx       8.8.8.8:xxx   ← pool funcionando
+ciscoR1# show ip nat statistics
+Hits: XXXX  Misses: XX
+Resultado esperado
+
+Servidor accesible desde Internet con IP fija 200.200.200.10
+PCs navegan usando las 6 IPs del pool con miles de puertos cada una
+Cambiar a PAT clásico: 2 líneas

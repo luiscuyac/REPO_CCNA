@@ -1,0 +1,128 @@
+LABORATORIO: SPANNING TREE PROTOCOL (STP) BASICO
+Prevención de bucles y elección de Root Bridge
+
+OBJETIVO DEL LABORATORIO
+Este laboratorio tiene como objetivo comprender cómo funciona el Spanning Tree Protocol (STP) en switches Cisco, cómo se elige el Root Bridge y cómo se comportan los puertos (Root, Designated y Alternate).
+El propósito principal de STP es evitar bucles de capa 2 en redes conmutadas cuando existen múltiples caminos físicos entre switches.
+
+STP es fundamental en redes reales de empresas, ya que sin él cualquier topología redundante provocaría broadcast storms y caída total de la red.
+
+TOPOLOGIA FISICA
+Switch SW1 conectado a SW2 y SW3 formando un triángulo:
+
+SW1 Fa0/1 ---- Fa0/1 SW2
+SW1 Fa0/2 ---- Fa0/1 SW3
+SW2 Fa0/2 ---- Fa0/2 SW3
+
+Esta topología crea un bucle físico, que STP debe resolver bloqueando uno de los enlaces.
+
+TEORIA RESUMIDA
+
+Spanning Tree Protocol (802.1D) evita bucles en redes de switches.
+
+Cada switch calcula un Bridge ID (Prioridad + MAC).
+
+El switch con el Bridge ID más bajo se convierte en Root Bridge.
+
+El Root Bridge siempre tiene todos sus puertos en estado Designated Forwarding.
+
+Los switches no root eligen un puerto Root (el camino más corto hacia el Root Bridge).
+
+Los puertos redundantes se ponen en Alternate Blocking para evitar bucles.
+
+Por defecto, Cisco usa PVST (STP clásico por VLAN).
+
+La prioridad por defecto es 32768.
+
+Prioridades más bajas = mayor probabilidad de ser Root Bridge.
+
+EQUIPOS UTILIZADOS
+
+3 Switches Cisco 2960
+
+Conexiones FastEthernet entre ellos
+
+CONFIGURACION IMPLEMENTADA
+Se configuró SW1 como Root Bridge para VLAN 1 ajustando su prioridad.
+
+COMANDOS UTILIZADOS EN SW1:
+
+conf t
+spanning-tree vlan 1 priority 4096
+end
+wr
+
+Este cambio hace que SW1 tenga la prioridad más baja entre los tres switches, convirtiéndose en Root Bridge.
+
+Los switches SW2 y SW3 quedaron con la prioridad por defecto:
+SW2: 8192
+SW3: 32768
+
+VERIFICACION CON SHOW SPANNING-TREE
+
+6.1 RESULTADO EN SW1 (ROOT BRIDGE)
+
+show spanning-tree vlan 1
+
+Root ID
+Priority 4097
+Address 000D.BDE5.1807
+This bridge is the root
+
+Puertos:
+Fa0/1 – Designated Forwarding
+Fa0/2 – Designated Forwarding
+
+Interpretacion:
+SW1 es el Root Bridge.
+Todos sus puertos están en estado Designated, como debe ser.
+
+6.2 RESULTADO EN SW2
+
+show spanning-tree vlan 1
+
+Root Port: Fa0/1
+Fa0/2 – Designated Forwarding
+
+Interpretacion:
+SW2 reconoce a SW1 como Root Bridge.
+Su puerto Fa0/1 es el camino más corto hacia el Root.
+Todo correcto.
+
+6.3 RESULTADO EN SW3
+
+show spanning-tree vlan 1
+
+Root Port: Fa0/1
+Fa0/2 – Alternate Blocking
+
+Interpretacion:
+STP detectó dos caminos posibles hacia SW1, pero eligió el más corto.
+El enlace SW3 Fa0/2 es redundante, y por eso STP lo bloquea (Alternate BLK).
+Esto evita el bucle.
+
+ANALISIS DEL COMPORTAMIENTO STP
+
+SW1 se convirtió en el Root Bridge gracias a la prioridad 4096.
+
+SW2 usa Fa0/1 como Root Port.
+
+SW3 usa Fa0/1 como Root Port.
+
+Fa0/2 en SW3 fue bloqueado correctamente para evitar bucles.
+
+La red queda estable y sin loops.
+
+Este es exactamente el comportamiento esperado en una topología en triángulo.
+
+CONCLUSIONES
+
+La elección del Root Bridge es crítica en redes reales.
+
+Cambiar la prioridad permite controlar el diseño de Capa 2.
+
+STP garantiza redundancia sin riesgo de bucles.
+
+El laboratorio refleja un escenario real de una empresa con enlaces redundantes.
+
+Comprender roles y estados de puertos es esencial para troubleshooting.

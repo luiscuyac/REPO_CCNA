@@ -1,0 +1,133 @@
+LABORATORIO OSPF MULTIAREA – 3 ROUTERS (R1, R2, R3)
+
+DESCRIPCIÓN GENERAL
+
+Este laboratorio implementa una red OSPF multiarea con tres routers Cisco 2811.
+Cada router tiene su LAN y se conecta al backbone (área 0) mediante enlaces seriales.
+Se configura autenticación básica, banner de advertencia y contraseñas seguras.
+
+TOPOLOGÍA Y ÁREAS
+Router 	| LAN 			| Enlace Serial 				| Área
+
+R1 	| 192.168.1.0/24 	| 10.0.0.0/30 (hacia R2)			| Área 1 y Área 0
+R2 	| 192.168.2.0/24 	| 10.0.0.0/30 (R1-R2), 10.0.0.4/30 (R2-R3) 	| Área 0 y Área 2
+R3 	| 192.168.3.0/24 	| 10.0.0.4/30 (hacia R2) 			| Área 2
+
+R1 y R2 son routers frontera de área (ABR).
+Área 0 actúa como backbone principal.
+
+CONFIGURACIÓN DE CADA ROUTER
+
+R1
+enable
+configure terminal
+hostname R1
+service password-encryption
+enable secret cisco123
+no ip domain-lookup
+banner motd ^CAcceso restringido: Solo personal autorizado^C
+interface FastEthernet0/0
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+interface Serial0/0/0
+ip address 10.0.0.1 255.255.255.252
+clock rate 64000
+no shutdown
+router ospf 1
+network 192.168.1.0 0.0.0.255 area 1
+network 10.0.0.0 0.0.0.3 area 0
+line console 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+transport input ssh
+end
+copy running-config startup-config
+reload
+
+R2
+enable
+configure terminal
+hostname R2
+service password-encryption
+enable secret cisco123
+no ip domain-lookup
+banner motd ^CAcceso restringido: Solo personal autorizado^C
+interface FastEthernet0/0
+ip address 192.168.2.1 255.255.255.0
+no shutdown
+interface Serial0/0/0
+ip address 10.0.0.2 255.255.255.252
+no shutdown
+interface Serial0/0/1
+ip address 10.0.0.5 255.255.255.252
+clock rate 64000
+no shutdown
+router ospf 1
+network 192.168.2.0 0.0.0.255 area 0
+network 10.0.0.0 0.0.0.3 area 0
+network 10.0.0.4 0.0.0.3 area 2
+line console 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+transport input ssh
+end
+copy running-config startup-config
+reload
+
+R3
+enable
+configure terminal
+hostname R3
+service password-encryption
+enable secret cisco123
+no ip domain-lookup
+banner motd ^CAcceso restringido: Solo personal autorizado^C
+interface FastEthernet0/0
+ip address 192.168.3.1 255.255.255.0
+no shutdown
+interface Serial0/0/1
+ip address 10.0.0.6 255.255.255.252
+no shutdown
+router ospf 1
+network 192.168.3.0 0.0.0.255 area 2
+network 10.0.0.4 0.0.0.3 area 2
+line console 0
+password cisco
+login
+line vty 0 4
+password cisco
+login
+transport input ssh
+end
+copy running-config startup-config
+reload
+
+CONFIGURACIÓN DE LAS PCs
+PC1: IP 192.168.1.10 / 255.255.255.0 / Gateway 192.168.1.1
+PC2: IP 192.168.2.10 / 255.255.255.0 / Gateway 192.168.2.1
+PC3: IP 192.168.3.10 / 255.255.255.0 / Gateway 192.168.3.1
+
+COMANDOS DE VERIFICACIÓN
+show ip ospf neighbor
+show ip ospf database
+show ip route ospf
+show ip protocols
+ping pc1-pc3
+
+NOTAS FINALES
+
+R1 y R2 actúan como ABR (Area Border Routers).
+
+Las interfaces FastEthernet conectan las LANs de cada área.
+
+Los enlaces Serial forman el backbone (Área 0).
+
+Todas las contraseñas están cifradas con service password-encryption.
+
+Se finaliza siempre con copy running-config startup-config y reload.
