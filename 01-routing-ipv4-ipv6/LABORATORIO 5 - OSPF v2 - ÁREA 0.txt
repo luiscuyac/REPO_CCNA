@@ -44,7 +44,7 @@ line con 0
 password cisco
 login
 line vty 0 4
-password cisco
+password cisco123
 login
 transport input ssh
 end
@@ -75,7 +75,7 @@ line con 0
 password cisco
 login
 line vty 0 4
-password cisco
+password cisco123
 login
 transport input ssh
 end
@@ -101,7 +101,7 @@ line con 0
 password cisco
 login
 line vty 0 4
-password cisco
+password cisco123
 login
 transport input ssh
 end
